@@ -44,7 +44,7 @@ export interface OnEventOptions<Event> {
  *                 Events typically use a discriminated union pattern (with a `type` string property).
  * @template State The type representing the state managed by this Bloc.
  */
-export interface Bloc<Event extends { type?: string } | object, State> {
+export interface Bloc<Event, State> {
   /**
    * An Observable stream that emits the Bloc's state whenever it changes.
    * Subscribers receive the latest state immediately upon subscription and

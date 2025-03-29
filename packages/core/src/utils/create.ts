@@ -74,6 +74,16 @@ interface HandlerConfig<Event, State> {
   transformer: EventTransformer<any>;
 }
 
+/**
+ * Properties required for creating a Bloc instance using `createBloc`.
+ * @template Event The base event union type for the Bloc.
+ * @template State The state type for the Bloc.
+ */
+export interface CreateBlocProps<Event, State> {
+  initialState: State;
+  onError?: BlocErrorHandler<Event>;
+}
+
 // --- Factory Function (`createBloc`) ---
 
 /**
@@ -93,11 +103,10 @@ interface HandlerConfig<Event, State> {
  *                                            centralized error logging or reporting.
  * @returns {Bloc<Event, State>} A Bloc instance adhering to the public API.
  */
-export function createBloc<Event extends { type?: string } | object, State>(
-  initialState: State,
-  onError?: BlocErrorHandler<Event>
+export function createBloc<Event, State>(
+  props: CreateBlocProps<Event, State>
 ): Bloc<Event, State> {
-  // Return type uses Event
+  const { initialState, onError } = props;
 
   // --- Private State & Subjects (managed by closure) ---
 
