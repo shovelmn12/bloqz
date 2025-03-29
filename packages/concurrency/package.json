@@ -1,0 +1,26 @@
+{
+  "name": "@bloc/concurrency",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "bloc",
+    "concurrency"
+  ],
+  "homepage": "https://github.com/shovelmn12/bloc#readme",
+  "bugs": {
+    "url": "https://github.com/shovelmn12/bloc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shovelmn12/bloc.git"
+  },
+  "license": "MIT",
+  "author": "Shovel Maman",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "devDependencies": {
+    "@bloc/core": "../core",
+    "rxjs": "^7.8.2"
+  }
+}

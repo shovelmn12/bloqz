@@ -19,9 +19,9 @@ A lightweight, functional implementation of the Bloc pattern for state managemen
 ## Installation
 
 ```bash
-npm install bloc.js
+npm install @bloc/core
 # or
-yarn add bloc.js
+yarn add @bloc/core
 ```
 
 ## Core Concepts
@@ -35,8 +35,9 @@ yarn add bloc.js
 ## Basic Usage
 
 ```typescript
-import { createBloc, sequential, restartable, BlocErrorHandler } from 'bloc.js'; // Adjust import path
-import { shareReplay } from 'rxjs'; // Import shareReplay if needed outside Bloc
+import { createBloc, BlocErrorHandler } from '@bloc/core'; 
+import { sequential, restartable } from '@bloc/concurrency';
+import { shareReplay } from 'rxjs';
 
 // 1. Define State Interface
 interface CounterState {
@@ -184,7 +185,7 @@ This library provides the core Bloc logic. To use it effectively in React:
 ```typescript
 // Example custom hook (simplified)
 import { useState, useEffect } from 'react';
-import { Bloc } from 'bloc.js';
+import { Bloc } from '@bloc/core'; 
 
 function useBlocState<Event, State>(bloc: Bloc<Event, State>): State {
   const [state, setState] = useState<State>(() => bloc.state); // Initial sync state

@@ -1,0 +1,32 @@
+{
+  "name": "@bloc/core",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [
+    "bloc"
+  ],
+  "homepage": "https://github.com/shovelmn12/bloc#readme",
+  "bugs": {
+    "url": "https://github.com/shovelmn12/bloc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shovelmn12/bloc.git"
+  },
+  "license": "MIT",
+  "author": "Shovel Maman",
+  "type": "commonjs",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "fp-ts": "^2.16.9",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2"
+  }
+}
