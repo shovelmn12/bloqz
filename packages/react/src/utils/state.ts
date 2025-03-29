@@ -37,7 +37,7 @@ import { Bloc } from "@bloc/core";
  *   );
  * }
  */
-export function useBlocState<Event extends { type?: string } | object, State>(
+export function useBlocState<Event, State>(
   context: Context<Bloc<Event, State>>
 ): State {
   // 1. Get the Bloc instance from the provided context

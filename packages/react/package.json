@@ -32,7 +32,8 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@bloc/core": "../core"
+    "@bloc/core": "../core",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
