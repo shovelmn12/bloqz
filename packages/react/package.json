@@ -1,13 +1,14 @@
 {
-  "name": "@bloc/core",
+  "name": "@bloc/react",
   "version": "1.0.0",
-  "description": "Core package for the functional Bloc state management library.",
+  "description": "React package for the functional Bloc state management library.",
   "keywords": [
     "bloc",
     "state management",
     "functional",
     "rxjs",
-    "typescript"
+    "typescript",
+    "react"
   ],
   "homepage": "https://github.com/shovelmn12/bloc#readme",
   "bugs": {
@@ -31,11 +32,11 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "fp-ts": "^2.16.9",
-    "rxjs": "^7.8.2"
+    "@bloc/core": "../core"
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
+    "react": "^19.1.0",
     "typescript": "^5.8.2"
   }
 }
