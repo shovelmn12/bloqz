@@ -1,9 +1,14 @@
 {
   "name": "@bloc/core",
   "version": "1.0.0",
-  "description": "",
+  "description": "Core package for the functional Bloc state management library.",
   "keywords": [
-    "bloc"
+    "bloc",
+    "state management",
+    "functional",
+    "rxjs",
+    "typescript",
+    "react"
   ],
   "homepage": "https://github.com/shovelmn12/bloc#readme",
   "bugs": {
@@ -16,10 +21,15 @@
   "license": "MIT",
   "author": "Shovel Maman",
   "type": "commonjs",
-  "main": "src/index.js",
-  "types": "src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc"
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "fp-ts": "^2.16.9",

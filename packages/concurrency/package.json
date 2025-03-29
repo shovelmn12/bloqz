@@ -1,10 +1,14 @@
 {
   "name": "@bloc/concurrency",
   "version": "1.0.0",
-  "description": "",
+  "description": "Concurrency package for the functional Bloc state management library.",
   "keywords": [
     "bloc",
-    "concurrency"
+    "state management",
+    "functional",
+    "rxjs",
+    "typescript",
+    "react"
   ],
   "homepage": "https://github.com/shovelmn12/bloc#readme",
   "bugs": {
@@ -17,8 +21,16 @@
   "license": "MIT",
   "author": "Shovel Maman",
   "type": "commonjs",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepublishOnly": "npm run build"
+  },
   "devDependencies": {
     "@bloc/core": "../core",
     "rxjs": "^7.8.2"
