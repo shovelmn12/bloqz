@@ -44,14 +44,14 @@ Install the necessary packages for your setup. Typically, you'll need `@bloc/cor
 
 ```bash
 # For a React project
-npm install @bloc/core @bloc/react @bloc/concurrency rxjs react
+npm install @bloc/react
 # or
-yarn add @bloc/core @bloc/react @bloc/concurrency rxjs react
+yarn add @bloc/react
 
 # For non-React usage (core only)
-npm install @bloc/core rxjs
+npm install @bloc/core
 # or
-yarn add @bloc/core rxjs
+yarn add @bloc/core
 ```
 
 ## Peer Dependencies
