@@ -97,22 +97,22 @@ interface HandlerConfig<Event, State> {
 
 /**
  * Creates a HandlerConfig object from an event type identifier and handler input.
- * Returns null if the input is invalid or null/undefined.
+ * Returns undefined if the input is invalid or undefined.
  *
  * @internal
  * @template Event The base event union type.
  * @template State The state type.
  * @param {string} eventTypeIdentifier The string identifying the event type.
  * @param {HandlerConfigInput<any, State> | undefined} handlerInput The handler input (function or definition object).
- * @returns {(HandlerConfig<Event, State> | null)} A valid HandlerConfig or null.
+ * @returns {(HandlerConfig<Event, State> | undefined)} A valid HandlerConfig or undefined.
  */
 function createHandlerConfigEntry<Event extends { type: string }, State>(
   eventTypeIdentifier: string, // Key is always string here
   handlerInput: EventHandler<any, State> | undefined
-): HandlerConfig<Event, State> | null {
-  // If the input for this key is null or undefined, skip it
+): HandlerConfig<Event, State> | undefined {
+  // If the input for this key is undefined or undefined, skip it
   if (!handlerInput) {
-    return null;
+    return undefined;
   }
 
   // Predicate always checks type against the identifier string
@@ -204,14 +204,16 @@ export function createBloc<Event extends { type: string }, State>(
   // --- Populate Handler Registry from Handlers Object ---
   const handlerConfigs = Object.entries(handlers)
     .map(([eventTypeIdentifier, handlerInput]) =>
-      // Create a config entry (or null) for each item in the handlers object
+      // Create a config entry (or undefined) for each item in the handlers object
       createHandlerConfigEntry<Event, State>(
         eventTypeIdentifier,
         handlerInput as EventHandler<any, State> | undefined // Ensure type matches helper
       )
     )
-    // Filter out any null results (from undefined inputs or potential future validation)
-    .filter((config): config is HandlerConfig<Event, State> => config !== null); // Type predicate for safety
+    // Filter out any undefined results (from undefined inputs or potential future validation)
+    .filter(
+      (config): config is HandlerConfig<Event, State> => config !== undefined
+    ); // Type predicate for safety
 
   /** @internal Use a Map internally for consistency */
   const _handlerRegistry = new Map<

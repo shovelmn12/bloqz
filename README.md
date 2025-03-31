@@ -209,7 +209,7 @@ function CounterStatus() {
 
 ### Async State Utility (`State<T, E>`)
 
-A utility union type and factories in `bloc.js/state` (or directly exported) for modeling async states: `init`, `loading`, `data`, `error`.
+A utility union type and factories in `@bloc/core` (or directly exported) for modeling async states: `init`, `loading`, `data`, `error`.
 
 *   `State.init<T, E>()`
 *   `State.loading<T, E>(previousValue?: Option<T>)`
@@ -219,8 +219,7 @@ A utility union type and factories in `bloc.js/state` (or directly exported) for
 *(Requires `fp-ts` for `Option`)*
 
 ```typescript
-import { State, Option, some, none } from 'bloc.js/state'; // Adjust import based on export
-// Or: import { State, Option, some, none } from 'fp-ts/Option'; + State type from bloc.js
+import { State, Option, some, none } from '@bloc/core';
 
 type FetchState = State<User, Error>;
 

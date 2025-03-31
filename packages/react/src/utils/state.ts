@@ -22,7 +22,7 @@ import { Bloc } from "@bloc/core";
  * @example
  * // MyCounterDisplay.tsx
  * import React from 'react';
- * import { useBlocState } from 'your-bloc-library'; // Adjust import path
+ * import { useBlocState } from '@bloc/react';
  * import { CounterBlocContext } from './counter.context';
  *
  * function MyCounterDisplay() {

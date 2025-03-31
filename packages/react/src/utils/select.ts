@@ -33,7 +33,7 @@ import { Bloc } from "@bloc/core";
  * @example
  * // MyCounterStatusDisplay.tsx
  * import React, { useCallback } from 'react';
- * import { useBlocSelectState } from 'your-bloc-library'; // Adjust import path
+ * import { useBlocSelectState } from '@bloc/react';
  * import { CounterBlocContext, CounterState } from './counter.context';
  *
  * function MyCounterStatusDisplay() {
