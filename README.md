@@ -56,9 +56,8 @@ yarn add @bloc/core
 
 ## Peer Dependencies
 
-*   `@bloc/core` requires `rxjs`.
-*   `@bloc/react` requires `react` (v18+), `@bloc/core`, and `rxjs`.
-*   `@bloc/concurrency` requires `@bloc/core` and `rxjs`.
+*   `@bloc/react` requires `react` (v18+).
+*   `@bloc/concurrency` requires `@bloc/core`.
 
 ## Core Concepts (`@bloc/core`)
 
