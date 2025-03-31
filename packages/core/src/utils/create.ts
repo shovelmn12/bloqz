@@ -16,235 +16,247 @@ import {
   BlocContext,
   EventTransformer,
   EventHandler,
+  EventHandlerFunction,
   EventTypeIdentifier,
-  BlocErrorHandler,
-  OnEventOptions,
   Bloc,
+  CreateBlocProps,
+  ErrorHandler,
 } from "@/models";
 
-// --- Internal Default Transformer ---
+// Assuming defaultTransformer and other required functions/types are defined or imported
+// e.g., sequential, concurrent, restartable, droppable if used in examples/defaults
+// Helper types assumed to be defined: EventTypeOf, ExtractEventByType
 
 /**
- * Provides the default event transformer if none is specified in `OnEventOptions`.
- * The default behavior is concurrent processing using `mergeMap`.
+ * Provides the default event transformer if none is specified.
+ * Default is concurrent processing.
  * @internal
- * @template Event The specific event type.
- * @returns {EventTransformer<Event>} An event transformer implementing concurrent processing.
  */
 function defaultTransformer<Event>(): EventTransformer<Event> {
-  // mergeMap subscribes to all inner Observables (project results) immediately, allowing parallel execution.
   return (project) => mergeMap(project);
 }
 
 // --- Internal Types ---
 
 /**
- * Internal configuration stored for each registered event handler.
- * This holds the logic needed to match and execute a handler for an event.
+ * Internal configuration stored within the Bloc's registry for each
+ * registered event handler. This structure holds all the necessary pieces
+ * to match an incoming event and execute the correct handler with the
+ * appropriate concurrency strategy.
  *
- * @template Event The event union type for the Bloc.
+ * @template Event The base event union type for the Bloc.
  * @template State The state type for the Bloc.
- * @internal
+ * @internal Should not be used directly by consumers of the library.
  */
 interface HandlerConfig<Event, State> {
   /**
-   * The predicate function used to determine if an incoming event
-   * matches the type this handler is registered for.
-   * Derived from the `eventTypeIdentifier` provided to `on`.
+   * The predicate function used to determine if an incoming event instance
+   * matches the specific event type this configuration is intended for.
+   * This function is derived from the `eventTypeIdentifier` (string literal
+   * or type predicate function) provided during handler registration.
+   *
+   * @param event An incoming event object from the `Event` union.
+   * @returns {boolean} `true` if the event matches, `false` otherwise.
    */
   predicate: (event: Event) => boolean;
+
   /**
-   * The actual event handler function provided by the user.
-   * Uses `any` internally for the event payload type as the public `on`
-   * overloads ensure type safety for the caller.
+   * The actual event handler function provided by the user via `on` or
+   * the `handlers` object during Bloc creation. This function contains the
+   * core logic to execute when a matching event occurs.
+   *
+   * Note: The event payload type is `any` here because this is an internal
+   * representation. The public-facing API (`on` method overloads or the
+   * `handlers` object typing) ensures type safety for the *user-provided*
+   * handler function based on the specific `eventTypeIdentifier`.
    */
-  handler: EventHandler<any, State>;
+  handler: EventHandlerFunction<any, State>;
+
   /**
-   * The original identifier (string literal or predicate function)
-   * used when registering the handler via `on`. Stored for potential
-   * debugging or future features like handler removal.
+   * The original identifier (either the event type string literal or the
+   * type predicate function reference) used when this handler was registered.
+   * This is stored primarily for internal purposes like grouping events in
+   * the processing pipeline and potentially for debugging or future features
+   * (e.g., unregistering handlers).
    */
   eventTypeIdentifier: EventTypeIdentifier<Event, any>;
+
   /**
-   * The event transformer function (e.g., from `sequential()`, `restartable()`)
-   * that dictates the concurrency behavior for processing events handled by this configuration.
-   * Uses `any` internally for the event type as the public `on` overloads
-   * ensure type safety for the caller.
+   * The event transformer function (e.g., one returned by `sequential()`,
+   * `restartable()`, etc., or a custom one) associated with this specific
+   * event handler. This function dictates the concurrency behavior (how
+   * multiple instances of the matching event are processed relative to each
+   * other) by applying the appropriate RxJS operator internally.
+   *
+   * Note: The event type is `any` here internally. Type safety for the
+   * transformer is handled during the registration phase based on the
+   * specific event type being registered.
    */
   transformer: EventTransformer<any>;
 }
 
 /**
- * Properties required for creating a Bloc instance using `createBloc`.
- * @template Event The base event union type for the Bloc.
- * @template State The state type for the Bloc.
+ * Creates a HandlerConfig object from an event type identifier and handler input.
+ * Returns null if the input is invalid or null/undefined.
+ *
+ * @internal
+ * @template Event The base event union type.
+ * @template State The state type.
+ * @param {string} eventTypeIdentifier The string identifying the event type.
+ * @param {HandlerConfigInput<any, State> | undefined} handlerInput The handler input (function or definition object).
+ * @returns {(HandlerConfig<Event, State> | null)} A valid HandlerConfig or null.
  */
-export interface CreateBlocProps<Event, State> {
-  initialState: State;
-  onError?: BlocErrorHandler<Event>;
+function createHandlerConfigEntry<Event extends { type: string }, State>(
+  eventTypeIdentifier: string, // Key is always string here
+  handlerInput: EventHandler<any, State> | undefined
+): HandlerConfig<Event, State> | null {
+  // If the input for this key is null or undefined, skip it
+  if (!handlerInput) {
+    return null;
+  }
+
+  // Predicate always checks type against the identifier string
+  const predicate = (event: Event): event is any =>
+    event.type === eventTypeIdentifier;
+
+  if (typeof handlerInput === "function") {
+    // Return the fully constructed config object
+    return {
+      predicate,
+      handler: handlerInput,
+      // We cast the string key back to the broader EventTypeIdentifier type for internal consistency,
+      // although in this specific flow, it's always a string.
+      eventTypeIdentifier: eventTypeIdentifier as EventTypeIdentifier<
+        Event,
+        any
+      >,
+      transformer: defaultTransformer(),
+    };
+  } else {
+    // Return the fully constructed config object
+    return {
+      predicate,
+      handler: handlerInput.handler,
+      // We cast the string key back to the broader EventTypeIdentifier type for internal consistency,
+      // although in this specific flow, it's always a string.
+      eventTypeIdentifier: eventTypeIdentifier as EventTypeIdentifier<
+        Event,
+        any
+      >,
+      transformer: handlerInput.transformer ?? defaultTransformer(),
+    };
+  }
 }
 
 // --- Factory Function (`createBloc`) ---
 
 /**
  * Creates a new Bloc instance for managing state based on events.
+ * Event handlers and their concurrency strategies are defined upfront via the `handlers` object.
+ * Handlers can be provided as functions directly, or as objects with handler/transformer properties.
  * It sets up the internal state management, event processing pipeline,
  * and provides the public API for interacting with the Bloc.
  *
+ * **Limitation:** This creation method only supports events identified via a `type` string property
+ * (discriminated unions). Type predicate identifiers are not supported with the `handlers` object.
+ *
  * @export
- * @template Event The base union type for all possible events this Bloc can process.
- *                 Events typically use a discriminated union pattern (with a `type` string property)
- *                 or can be identified via type predicates.
+ * @template Event The base union type for all possible events (must have a 'type' string property).
  * @template State The type representing the state managed by this Bloc.
- * @param {State} initialState The initial state of the Bloc.
- * @param {BlocErrorHandler<Event>} [onError] Optional callback function invoked globally
- *                                            whenever an error occurs *within* any registered
- *                                            event handler during its execution. Useful for
- *                                            centralized error logging or reporting.
- * @returns {Bloc<Event, State>} A Bloc instance adhering to the public API.
+ * @param {CreateBlocProps<Event, State>} props An object containing the configuration properties
+ *   for the Bloc: `initialState`, `handlers` object, and optional `onError`.
+ * @returns {Bloc<Event, State>} A Bloc instance adhering to the public API (without the `on` method).
+ * @example
+ * const counterBloc = createBloc({
+ *   initialState: { count: 0, status: 'idle' },
+ *   handlers: {
+ *     INCREMENT: (event, { update }) => { // event is inferred as IncrementEvent
+ *       update(s => ({ ...s, count: s.count + event.amount }));
+ *     },
+ *     DECREMENT: {
+ *       handler: (event, { update }) => { // event is inferred as DecrementEvent
+ *         update(s => ({ ...s, count: s.count - event.amount }));
+ *       },
+ *       transformer: sequential() // Example using imported sequential transformer
+ *     }
+ *   },
+ *   onError: (error, event) => console.error('Bloc Error:', error, event)
+ * });
  */
-export function createBloc<Event, State>(
+export function createBloc<Event extends { type: string }, State>(
   props: CreateBlocProps<Event, State>
 ): Bloc<Event, State> {
-  const { initialState, onError } = props;
+  // --- Destructure properties from props ---
+  const { initialState, handlers, onError } = props;
 
   // --- Private State & Subjects (managed by closure) ---
-
-  /** @internal Manages the current state and emits state changes. */
+  /** @internal */
   const _stateSubject = new BehaviorSubject<State>(initialState);
-  /** @internal Subject for receiving incoming events dispatched via `add`. */
+  /** @internal */
   const _eventSubject = new Subject<Event>();
-  /** @internal Subject for emitting errors that occur within event handlers. */
+  /** @internal */
   const _errorSubject = new Subject<{ event: Event; error: unknown }>();
-  /** @internal Registry mapping event identifiers to their handler configurations. */
+  /** @internal */
+  const _onErrorCallback: ErrorHandler<Event> | undefined = onError;
+  /** @internal */
+  let _isClosed = false;
+
+  // --- Populate Handler Registry from Handlers Object ---
+  const handlerConfigs = Object.entries(handlers)
+    .map(([eventTypeIdentifier, handlerInput]) =>
+      // Create a config entry (or null) for each item in the handlers object
+      createHandlerConfigEntry<Event, State>(
+        eventTypeIdentifier,
+        handlerInput as EventHandler<any, State> | undefined // Ensure type matches helper
+      )
+    )
+    // Filter out any null results (from undefined inputs or potential future validation)
+    .filter((config): config is HandlerConfig<Event, State> => config !== null); // Type predicate for safety
+
+  /** @internal Use a Map internally for consistency */
   const _handlerRegistry = new Map<
     EventTypeIdentifier<Event, any>,
     HandlerConfig<Event, State>
-  >();
-  /** @internal Optional global error handler callback provided by the user. */
-  const _onErrorCallback: BlocErrorHandler<Event> | undefined = onError;
-  /** @internal Flag indicating if the Bloc has been closed. */
-  let _isClosed = false;
+  >(
+    // Convert the array of valid config objects into Map entries
+    handlerConfigs.map((config) => [config.eventTypeIdentifier, config])
+  );
 
-  // --- State Update Function (uses State) ---
-
-  /**
-   * Internal function to update the Bloc's state.
-   * Emits the new state on the _stateSubject if it differs from the current state.
-   * @internal
-   * @param newValueOrFn The new state value or a function to compute it based on the current state.
-   */
+  // --- State Update Function ---
+  /** @internal */
   const updateState = (
     newValueOrFn: State | ((currentState: State) => State)
   ): void => {
     if (_isClosed) {
-      // Avoid state updates after the Bloc is closed.
       console.warn("Bloc: Attempted to update state after closed.");
       return;
     }
-    // Get the absolute current state before calculating the next state.
     const currentState = _stateSubject.getValue();
     const nextState =
       typeof newValueOrFn === "function"
         ? (newValueOrFn as (currentState: State) => State)(currentState)
         : newValueOrFn;
-    // Only emit if the state has actually changed.
     if (nextState !== currentState) {
       _stateSubject.next(nextState);
     }
   };
 
-  // --- Handler Registration (`on` method implementation) ---
-
-  /**
-   * Internal implementation of the `on` method. Registers the handler configuration.
-   * Relies on public overloads for external type safety.
-   * @internal
-   */
-  const on = (
-    eventTypeIdentifier: EventTypeIdentifier<Event, any>, // Uses Event
-    handler: EventHandler<any, State>,
-    options: OnEventOptions<any> = {}
-  ): Bloc<Event, State> => {
-    if (_isClosed) {
-      console.warn("Bloc: Attempted to register handler after closed.");
-      return bloc; // Return the already defined instance
-    }
-
-    // Warn if a handler for the same identifier is being overwritten.
-    if (_handlerRegistry.has(eventTypeIdentifier)) {
-      console.warn(
-        `Bloc: Handler for event type identified by "${String(
-          eventTypeIdentifier
-        )}" already registered. Overwriting.`
-      );
-    }
-
-    // Determine the transformer, defaulting to concurrent processing via defaultTransformer().
-    // ** JSDoc for OnEventOptions should reflect this default if defined elsewhere **
-    const transformer = options.transformer ?? defaultTransformer();
-    let predicate: (event: Event) => boolean; // Predicate function to match events
-
-    // Create the predicate based on the identifier type.
-    if (typeof eventTypeIdentifier === "string") {
-      // Match based on the 'type' property for discriminated unions.
-      predicate = (event: Event): event is any =>
-        (event as any)?.type === eventTypeIdentifier; // Uses Event
-    } else if (typeof eventTypeIdentifier === "function") {
-      // Use the provided type predicate function directly.
-      predicate = eventTypeIdentifier as (event: Event) => boolean; // Uses Event
-    } else {
-      // Invalid identifier type provided.
-      console.error(
-        "Bloc: Invalid eventTypeIdentifier provided to 'on'. Must be a string literal or a type predicate function."
-      );
-      return bloc; // Return the instance without registering
-    }
-
-    // Store the handler configuration in the registry.
-    _handlerRegistry.set(eventTypeIdentifier, {
-      predicate,
-      handler,
-      eventTypeIdentifier,
-      transformer,
-    });
-
-    // Return the Bloc instance for chaining.
-    return bloc;
-  };
-
   // --- Event Dispatch (`add` method) ---
-
-  /**
-   * Internal implementation of the `add` method. Pushes events onto the event subject.
-   * @internal
-   */
+  /** @internal */
   const add = (event: Event): void => {
     if (_isClosed) {
       console.warn("Bloc: Attempted to add event after closed.");
       return;
     }
-    // Push the event into the processing pipeline.
     _eventSubject.next(event);
   };
 
   // --- State Getter ---
-
-  /**
-   * Internal function to retrieve the current state synchronously.
-   * @internal
-   */
+  /** @internal */
   const getState = (): State => _stateSubject.getValue();
 
   // --- Core Event Processing Logic ---
-
-  /**
-   * The main RxJS subscription that processes events from the _eventSubject.
-   * This pipeline finds the appropriate handler, applies the concurrency transformer,
-   * executes the handler, and manages errors.
-   * It starts immediately upon Bloc creation.
-   * @internal
-   */
+  /** @internal */
   const _subscription = _eventSubject
     .pipe(
       // Step 1: Find the matching handler configuration for the incoming event.
@@ -264,14 +276,14 @@ export function createBloc<Event, State>(
       // Unhandled events are grouped under a special key.
       groupBy(
         ([event, config]) =>
-          config?.eventTypeIdentifier ?? " S Y M B O L _ U N H A N D L E D "
+          config?.eventTypeIdentifier ?? " S Y M B O L _ U N H A N D L E D " // Key is now always string or symbol
       ),
 
       // Step 3: Process each group of events concurrently.
       // For each group, apply the specific transformer defined in its config.
       mergeMap((grouped$) => {
         // Retrieve the configuration associated with this group's key.
-        const config = _handlerRegistry.get(grouped$.key);
+        const config = _handlerRegistry.get(grouped$.key); // Get config using string key
 
         if (!config) {
           // This group contains unhandled events.
@@ -358,14 +370,9 @@ export function createBloc<Event, State>(
     .subscribe(); // Activate the event processing pipeline.
 
   // --- Cleanup (`close` method) ---
-
-  /**
-   * Internal implementation of the `close` method. Cleans up resources.
-   * @internal
-   */
+  /** @internal */
   const close = (): void => {
     if (_isClosed) return; // Prevent multiple closes
-
     _isClosed = true; // Mark as closed
 
     // Unsubscribe from the main event processing pipeline.
@@ -379,24 +386,15 @@ export function createBloc<Event, State>(
     // console.log("Bloc: Closed."); // Optional logging
   };
 
-  // --- Create the Public API Object ---
-  // This is the object returned to the user.
-
+  // --- Create the Public API Object (without `on`) ---
   /** @internal The public Bloc instance. */
   const bloc: Bloc<Event, State> = {
-    /** Expose state changes as a shareReplayed Observable. */
     state$: _stateSubject.asObservable().pipe(shareReplay(1)),
-    /** Provide synchronous access to the current state via a getter. */
     get state() {
       return getState();
     },
-    /** Expose handler errors as an Observable stream. */
     errors$: _errorSubject.asObservable(),
-    /** Expose the `on` method for registering handlers. */
-    on,
-    /** Expose the `add` method for dispatching events. */
     add,
-    /** Expose the `close` method for cleanup. */
     close,
   };
 

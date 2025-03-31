@@ -72,12 +72,41 @@ export type EventTransformer<Event> = (
  * @template Event The specific type of the event payload this handler processes.
  * @template State The type of the state managed by the Bloc.
  */
-export type EventHandler<Event, State> = (
+export type EventHandlerFunction<Event, State> = (
   /** The specific event object that triggered this handler. */
   event: Event,
   /** The context providing state access and update capabilities. */
   context: BlocContext<State>
 ) => void | Promise<void>; // Can be sync or async
+
+/**
+ * Defines the structure for providing an event handler and optionally its transformer.
+ * Used when more configuration than just the handler function is needed.
+ *
+ * @template Event The specific type of the event payload this definition handles.
+ * @template State The state type for the Bloc.
+ */
+export interface EventHandlerObject<Event, State> {
+  /** The function to execute when the corresponding event occurs. */
+  handler: EventHandlerFunction<Event, State>;
+  /**
+   * Optional: Specifies the concurrency behavior for this specific handler.
+   * If omitted, the default transformer (concurrent) will be used.
+   */
+  transformer?: EventTransformer<Event>;
+}
+
+/**
+ * Represents the possible inputs for a handler configuration in the `handlers` object.
+ * It can be either the EventHandler function directly, or an object containing
+ * the handler and optional transformer options.
+ *
+ * @template Event The specific type of the event payload this configuration handles.
+ * @template State The state type for the Bloc.
+ */
+export type EventHandler<Event, State> =
+  | EventHandlerFunction<Event, State> // Direct handler function
+  | EventHandlerObject<Event, State>; // Object with handler/options
 
 /**
  * A type that represents the mechanism used to identify and register handlers
@@ -110,7 +139,7 @@ export type EventTypeIdentifier<BaseEvent, Event extends BaseEvent> =
  *
  * @template Event The event union type for the Bloc.
  */
-export type BlocErrorHandler<Event> = (
+export type ErrorHandler<Event> = (
   /** The error that was thrown or rejected within the EventHandler. */
   error: unknown,
   /** The specific event instance that was being processed when the error occurred. */
