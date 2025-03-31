@@ -175,7 +175,7 @@ This library leverages TypeScript for strong typing. Ensure your `Event` type is
 
 ## Contributing
 
-(Add contribution guidelines if applicable)
+Contributions are welcome! Please follow standard practices like opening issues for discussion before submitting pull requests.
 
 ## License
 

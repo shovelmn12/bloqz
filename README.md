@@ -233,7 +233,7 @@ Exports standard `EventTransformer` functions:
 
 ## Contributing
 
-(Add contribution guidelines if applicable)
+Contributions are welcome! Please follow standard practices like opening issues for discussion before submitting pull requests.
 
 ## License
 
