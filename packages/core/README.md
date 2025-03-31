@@ -22,9 +22,9 @@ This core package provides the main `createBloc` factory, type definitions, and 
 ## Installation
 
 ```bash
-npm install @bloc/core rxjs
+npm install @bloc/core
 # or
-yarn add @bloc/core rxjs
+yarn add @bloc/core
 ```
 
 **Note:** This package relies on `rxjs` as a peer dependency. You need to have it installed in your project.
