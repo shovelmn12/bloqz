@@ -1,0 +1,43 @@
+{
+  "name": "@bloc/preact",
+  "version": "1.0.0",
+  "description": "Preact package for the functional Bloc state management library.",
+  "keywords": [
+    "bloc",
+    "state management",
+    "functional",
+    "rxjs",
+    "typescript",
+    "react"
+  ],
+  "homepage": "https://github.com/shovelmn12/bloc#readme",
+  "bugs": {
+    "url": "https://github.com/shovelmn12/bloc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shovelmn12/bloc.git"
+  },
+  "license": "MIT",
+  "author": "Shovel Maman",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@bloc/core": "../core",
+    "preact": "^10.26.9",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2"
+  }
+}
