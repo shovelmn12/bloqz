@@ -18,13 +18,16 @@
     "url": "git+https://github.com/shovelmn12/bloc.git"
   },
   "license": "MIT",
-  "author": "Shovel Maman",
+  "author": "Shovel Maman (shovelmn12@gmail.com)",
   "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc",
