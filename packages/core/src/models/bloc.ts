@@ -1,3 +1,4 @@
+import { boolean } from "fp-ts";
 import { Observable, EMPTY as EMPTY_STREAM } from "../utils/stream.js";
 
 /**
@@ -14,6 +15,8 @@ import { Observable, EMPTY as EMPTY_STREAM } from "../utils/stream.js";
  * @template State The type representing the state managed by this Bloc.
  */
 export interface Bloc<Event, State> {
+  readonly id: string;
+
   /**
    * An Observable stream that emits the Bloc's state whenever it changes.
    * Subscribers receive the latest state immediately upon subscription and
@@ -86,12 +89,16 @@ export interface Bloc<Event, State> {
    * }, []);
    */
   readonly close: () => void;
+
+  readonly isClosed: boolean;
 }
 
 export const EMPTY = {
+  id: "EMPTY",
   state$: EMPTY_STREAM,
   state: {},
   errors$: EMPTY_STREAM,
   add: () => {},
   close: () => {},
+  isClosed: false,
 };

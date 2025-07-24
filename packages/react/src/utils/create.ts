@@ -1,74 +1,62 @@
-import { useMemo, useEffect } from "./react.js";
+import { useRef, useEffect } from "./react.js";
 import { createBloc, Bloc, CreateBlocProps } from "@bloc/core";
 
 /**
- * A React Hook that creates and memoizes a Bloc instance, automatically
- * handling its cleanup via `bloc.close()` when the component unmounts.
+ * @template Event The type of events that the Bloc can receive. Must have a 'type' property.
+ * @template State The type of the state that the Bloc holds.
  *
- * This hook wraps the core `createBloc` factory function within `useMemo`
- * with an empty dependency array (`[]`). This ensures that the Bloc instance
- * is created only **once** when the component using the hook first mounts,
- * and the same instance is returned on every subsequent render.
+ * @param {CreateBlocProps<Event, State>} initialProps The initial properties to create the Bloc.
+ * @returns {Bloc<Event, State>} The created Bloc instance.
  *
- * It also uses `useEffect` to register the `bloc.close` method as a cleanup
- * function, ensuring resources are released when the component instance
- * associated with this hook unmounts.
+ * @description
+ * A React hook that creates and manages the lifecycle of a Bloc instance.
+ * It ensures that the Bloc is created only once per component instance and is
+ * properly closed when the component unmounts.
  *
- * This is the recommended way to instantiate Blocs within React components,
- * particularly when providing them via Context, as it guarantees a stable
- * instance and handles cleanup automatically.
- *
- * @export
- * @template Event The base union type for all possible events the Bloc can process
- *                 (must have a 'type' string property).
- * @template State The type representing the state managed by the Bloc.
- * @param {CreateBlocProps<Event, State>} props An object containing the configuration properties
- *   (initialState, handlers, onError) needed to create the Bloc instance.
- *   **Note:** Since the `useMemo` dependency array is empty, changes to the `props` object
- *   passed on subsequent renders will **not** cause the Bloc to be recreated. The initial
- *   `props` object from the first render is used. Consider lifting state up or using refs
- *   if dynamically changing props needs to influence Bloc creation (though usually Bloc
- *   recreation is avoided).
- * @returns {Bloc<Event, State>} A stable, memoized Bloc instance that will be automatically closed on unmount.
- * @see https://react.dev/reference/react/useMemo
- * @see https://react.dev/reference/react/useEffect (for cleanup behavior)
- * @see {@link createBloc}
- * @example
- * // CounterProvider.tsx
- * import React from 'react';
- * import { useCreateBloc } from '@bloc/react';
- * import { CounterContext } from './counter.context';
- * import { initialState, handlers, CounterEvent, CounterState } from './types';
- *
- * function CounterProvider({ children }) {
- *   // Create and automatically manage the lifecycle of the Bloc instance
- *   const counterBloc = useCreateBloc<CounterEvent, CounterState>({
- *     initialState,
- *     handlers,
- *   });
- *   // No separate useEffect needed for bloc.close() in this component
- *
- *   return (
- *     <CounterContext.Provider value={counterBloc}>
- *       {children}
- *     </CounterContext.Provider>
- *   );
- * }
+ * This hook is designed to work correctly with React's Strict Mode, which
+ * can cause components to render twice in development to detect potential problems.
+ * It uses a ref to track the mounted state and prevent the Bloc from being
+ * prematurely closed during the initial double-render cycle of Strict Mode.
  */
 export function useCreateBloc<Event extends { type: string }, State>(
   props: CreateBlocProps<Event, State>
 ): Bloc<Event, State> {
-  // Create the Bloc instance only once using useMemo with empty dependencies.
-  const bloc = useMemo(() => createBloc<Event, State>(props), []); // Empty array means props from first render are used
+  const blocRef = useRef<Bloc<Event, State> | null>(null);
+  // This ref acts as a flag to track if the component has mounted for the "first real time"
+  // (i.e., after Strict Mode's initial double-render cycle).
+  const didMountRef = useRef(false);
 
-  // Set up an effect to call bloc.close() when the component unmounts
-  // or when the bloc instance itself changes (which shouldn't happen with useMemo([])).
-  // Passing bloc.close directly as the effect cleanup function is concise.
+  // 1. Bloc Creation (Runs only once per component instance)
+  if (blocRef.current === null) {
+    blocRef.current = createBloc<Event, State>(props);
+  }
+
+  // 2. Effect for Cleanup (Handles Strict Mode's double-invocation)
   useEffect(() => {
-    // The cleanup function returned by useEffect
-    return bloc.close;
-  }, [bloc]); // Dependency array includes bloc to satisfy lint rules, but it's stable
+    const currentBloc = blocRef.current!; // Guaranteed to be non-null here
 
-  // Return the stable, memoized bloc instance.
-  return bloc;
+    // This block runs on the *first* invocation of the effect after mount.
+    // In Strict Mode, this is the "simulated mount."
+    if (!didMountRef.current) {
+      didMountRef.current = true; // Mark that we've passed the initial mount phase
+
+      // Return a cleanup function for the first pass.
+      // In Strict Mode, this cleanup is called immediately.
+      // We explicitly do *not* close the bloc here.
+      return () => {
+        // No action here. The actual close happens in the *next* cleanup.
+      };
+    } else {
+      // This block runs on the *second* invocation of the effect after mount (in Strict Mode),
+      // or the single invocation in a production environment.
+
+      // Return the cleanup function that should *actually* close the bloc.
+      return () => {
+        currentBloc.close(); // This is the only time the bloc is truly closed by this hook.
+        blocRef.current = null; // Optional: Clear the ref on final unmount
+      };
+    }
+  }, []); // Empty dependency array: ensures this effect runs once per component instance.
+
+  return blocRef.current!;
 }

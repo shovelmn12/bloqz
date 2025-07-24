@@ -23,6 +23,8 @@ import {
   ErrorHandler,
 } from "../models/index.js";
 
+let i = 0;
+
 // Assuming defaultTransformer and other required functions/types are defined or imported
 // e.g., sequential, concurrent, restartable, droppable if used in examples/defaults
 // Helper types assumed to be defined: EventTypeOf, ExtractEventByType
@@ -391,6 +393,7 @@ export function createBloc<Event extends { type: string }, State>(
   // --- Create the Public API Object (without `on`) ---
   /** @internal The public Bloc instance. */
   const bloc: Bloc<Event, State> = {
+    id: `${i++}`,
     state$: _stateSubject.asObservable().pipe(shareReplay(1)),
     get state() {
       return getState();
@@ -398,6 +401,9 @@ export function createBloc<Event extends { type: string }, State>(
     errors$: _errorSubject.asObservable(),
     add,
     close,
+    get isClosed() {
+      return _isClosed;
+    },
   };
 
   // Return the constructed Bloc instance.
