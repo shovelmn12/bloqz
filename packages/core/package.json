@@ -19,9 +19,12 @@
   },
   "license": "MIT",
   "author": "Shovel Maman (shovelmn12@gmail.com)",
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    "main": "./dist/index.js",
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
   "files": [
     "dist"
   ],

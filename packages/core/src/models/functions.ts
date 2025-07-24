@@ -1,5 +1,5 @@
-import { ObservableInput, OperatorFunction } from "@/utils/stream";
-import { BlocContext } from "@/models";
+import { ObservableInput, OperatorFunction } from "../utils/stream.js";
+import { BlocContext } from "../models/index.js";
 
 // --- Event Type Helpers ---
 

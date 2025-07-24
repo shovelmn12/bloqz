@@ -11,7 +11,7 @@ import {
   catchError,
   finalize,
   from,
-} from "@/utils/stream";
+} from "./stream.js";
 import {
   BlocContext,
   EventTransformer,
@@ -21,7 +21,7 @@ import {
   Bloc,
   CreateBlocProps,
   ErrorHandler,
-} from "@/models";
+} from "../models/index.js";
 
 // Assuming defaultTransformer and other required functions/types are defined or imported
 // e.g., sequential, concurrent, restartable, droppable if used in examples/defaults

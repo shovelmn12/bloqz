@@ -1,4 +1,4 @@
-import { ErrorHandler, EventHandlersObject } from "@/models";
+import { ErrorHandler, EventHandlersObject } from "../models/index.js";
 
 /**
  * Properties required for creating a Bloc instance using `createBloc`.

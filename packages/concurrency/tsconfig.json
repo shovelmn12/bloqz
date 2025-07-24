@@ -1,39 +1,26 @@
 {
   "compilerOptions": {
-    // Type Checking
     "strict": true,
-    "noImplicitAny": true, // Recommended with strict
-    "strictNullChecks": true, // Recommended with strict
-    "strictFunctionTypes": true, // Recommended with strict
-    "strictBindCallApply": true, // Recommended with strict
-    "strictPropertyInitialization": true, // Recommended with strict
-    "noImplicitThis": true, // Recommended with strict
-    "useUnknownInCatchVariables": true, // Recommended
-    "alwaysStrict": true, // Ensure 'use strict' is emitted
-
-    // Modules
-    "module": "CommonJS", // Changed from preserve to CommonJS
-    "baseUrl": ".", // Added baseUrl, essential for paths
-    "paths": {
-      "@/*": ["./src/*"] // Keep path alias for internal use
-    },
-    "moduleResolution": "node", // Keep as node or node16/nodenext if preferred
-
-    // Emit
-    "declaration": true, // Keep true: Generate .d.ts files
-    "sourceMap": true, // Keep true: Generate .map files for debugging
-    "outDir": "./dist", // Keep output directory
-    "removeComments": false, // Keep comments for JSDoc in declarations (optional: set true to remove from JS)
-
-    // Interop Constraints
-    "esModuleInterop": true, // Keep true: Enables interoperability
-    "forceConsistentCasingInFileNames": true, // Good practice
-
-    // Language and Environment
-    "target": "ES2021", // Keep modern target
-    "lib": ["ES2021", "DOM"], // Added DOM lib just in case, adjust if purely Node
-    "skipLibCheck": true // Speeds up compilation by not checking libs' .d.ts files
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "removeComments": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "target": "esnext",
+    "lib": ["ES2022", "DOM"],
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"], // Explicitly include only source files
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"] // Exclude build/test files
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

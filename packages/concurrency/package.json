@@ -19,10 +19,13 @@
     "url": "git+https://github.com/shovelmn12/bloc.git"
   },
   "license": "MIT",
-  "author": "Shovel Maman",
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "author": "Shovel Maman (shovelmn12@gmail.com)",
+  "type": "module",
+  "exports": {
+    "main": "./dist/index.js",
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
   "files": [
     "dist"
   ],
@@ -31,8 +34,12 @@
     "build": "npm run clean && tsc",
     "prepublishOnly": "npm run build"
   },
+  "dependencies": {
+    "rxjs": "^7.8.2"
+  },
   "devDependencies": {
     "@bloc/core": "../core",
-    "rxjs": "^7.8.2"
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2"
   }
 }

@@ -1,4 +1,4 @@
-import { use, Context } from "@/utils/preact";
+import { use, Context } from "./preact.js";
 import { Bloc } from "@bloc/core";
 
 /**

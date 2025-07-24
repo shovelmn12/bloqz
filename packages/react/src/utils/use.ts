@@ -1,4 +1,4 @@
-import { use, Context } from "@/utils/react";
+import { use, Context } from "./react.js";
 import { Bloc } from "@bloc/core";
 
 /**

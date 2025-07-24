@@ -19,10 +19,13 @@
     "url": "git+https://github.com/shovelmn12/bloc.git"
   },
   "license": "MIT",
-  "author": "Shovel Maman",
-  "type": "commonjs",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "author": "Shovel Maman (shovelmn12@gmail.com)",
+  "type": "module",
+  "exports": {
+    "main": "./dist/index.js",
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
   "files": [
     "dist"
   ],

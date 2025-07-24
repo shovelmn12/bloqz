@@ -1,4 +1,4 @@
-import { Observable } from "@/utils/stream";
+import { Observable, EMPTY as EMPTY_STREAM } from "../utils/stream.js";
 
 /**
  * The public interface for a Bloc instance created by `createBloc`.
@@ -87,3 +87,11 @@ export interface Bloc<Event, State> {
    */
   readonly close: () => void;
 }
+
+export const EMPTY = {
+  state$: EMPTY_STREAM,
+  state: {},
+  errors$: EMPTY_STREAM,
+  add: () => {},
+  close: () => {},
+};

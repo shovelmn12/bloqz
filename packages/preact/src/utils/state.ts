@@ -1,5 +1,5 @@
-import { Context, useSyncExternalStore } from "@/utils/preact";
-import { useBloc } from "@/utils/use";
+import { Context, useSyncExternalStore } from "./preact.js";
+import { useBloc } from "./use.js";
 import { Bloc } from "@bloc/core";
 
 /**
@@ -41,10 +41,10 @@ export function useBlocState<Event, State>(
   context: Context<Bloc<Event, State>>
 ): State {
   // 1. Get the Bloc instance from the provided context
-  const bloc = useBloc(context);
+  const bloc = useBloc<Event, State>(context);
 
   // 2. Use useSyncExternalStore to subscribe to the Bloc's state stream
-  const state = useSyncExternalStore(
+  const state = useSyncExternalStore<State>(
     // subscribe: This function is called by React to set up the subscription.
     // It must return an unsubscribe function.
     (onStoreChange) => {

@@ -1,6 +1,6 @@
-import { Context, useSyncExternalStore } from "@/utils/react";
-import { useBloc } from "@/utils/use";
-import { map, distinctUntilChanged } from "@/utils/stream";
+import { Context, useSyncExternalStore } from "./react.js";
+import { useBloc } from "./use.js";
+import { map, distinctUntilChanged } from "./stream.js";
 import { Bloc } from "@bloc/core";
 
 /**

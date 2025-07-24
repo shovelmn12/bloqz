@@ -1,4 +1,4 @@
-import { createContext, Context } from "react";
+import { createContext, Context } from "./react.js";
 import { Bloc } from "@bloc/core";
 
 /**

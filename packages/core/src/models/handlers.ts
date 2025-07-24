@@ -1,4 +1,8 @@
-import { EventHandler, EventTypeOf, ExtractEventByType } from "@/models";
+import {
+  EventHandler,
+  EventTypeOf,
+  ExtractEventByType,
+} from "../models/index.js";
 
 /**
  * A mapped type representing the structure for the handlers object.

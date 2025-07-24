@@ -5,7 +5,5 @@ export {
   Subscription,
   EMPTY,
   from,
-  ObservableInput,
-  OperatorFunction,
 } from "rxjs";
 export * from "rxjs/operators";

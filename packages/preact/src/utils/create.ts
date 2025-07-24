@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "@/utils/preact";
+import { useMemo, useEffect } from "./preact.js";
 import { createBloc, Bloc, CreateBlocProps } from "@bloc/core";
 
 /**

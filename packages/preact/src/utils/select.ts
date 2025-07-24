@@ -1,6 +1,6 @@
-import { Context, useSyncExternalStore } from "@/utils/preact";
-import { useBloc } from "@/utils/use";
-import { map, distinctUntilChanged } from "@/utils/stream";
+import { Context, useSyncExternalStore } from "./preact.js";
+import { useBloc } from "./use.js";
+import { map, distinctUntilChanged } from "./stream.js";
 import { Bloc } from "@bloc/core";
 
 /**
@@ -52,10 +52,10 @@ export function useBlocSelectState<Event, State, T>(
   selector: (state: State) => T
 ): T {
   // 1. Get the Bloc instance from the provided context
-  const bloc = useBloc(context);
+  const bloc = useBloc<Event, State>(context);
 
   // 2. Use useSyncExternalStore to subscribe and select
-  const state = useSyncExternalStore(
+  const state = useSyncExternalStore<T>(
     // subscribe: Subscribe to the original state stream, but pipe the selector
     // through an RxJS map operator BEFORE subscribing React's change listener.
     // This ensures React is only notified when the *selected* value potentially changes.

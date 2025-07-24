@@ -1,5 +1,5 @@
-import { Context, useSyncExternalStore } from "@/utils/react";
-import { useBloc } from "@/utils/use";
+import { Context, useSyncExternalStore } from "./react.js";
+import { useBloc } from "./use.js";
 import { Bloc } from "@bloc/core";
 
 /**
