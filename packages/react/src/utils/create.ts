@@ -1,62 +1,108 @@
-import { useRef, useEffect } from "./react.js";
+import { useRef, useEffect, useMemo } from "./react.js";
 import { createBloc, Bloc, CreateBlocProps } from "@bloc/core";
 
+const isDev = process.env.NODE_ENV === "development";
+
 /**
- * @template Event The type of events that the Bloc can receive. Must have a 'type' property.
- * @template State The type of the state that the Bloc holds.
+ * A React Hook for creating and managing a Bloc instance within a component's lifecycle.
  *
- * @param {CreateBlocProps<Event, State>} initialProps The initial properties to create the Bloc.
- * @returns {Bloc<Event, State>} The created Bloc instance.
+ * This hook ensures that a Bloc instance is created once for the component and
+ * automatically handles its closure when the component unmounts.
  *
- * @description
- * A React hook that creates and manages the lifecycle of a Bloc instance.
- * It ensures that the Bloc is created only once per component instance and is
- * properly closed when the component unmounts.
+ * In `React.StrictMode` development mode, this hook includes specific logic
+ * to mitigate the effects of the double-rendering and simulated unmounts that
+ * Strict Mode performs, ensuring the Bloc remains functional during development.
  *
- * This hook is designed to work correctly with React's Strict Mode, which
- * can cause components to render twice in development to detect potential problems.
- * It uses a ref to track the mounted state and prevent the Bloc from being
- * prematurely closed during the initial double-render cycle of Strict Mode.
+ * @template Event - The type of events the Bloc can process. Must extend `{ type: string }`.
+ * @template State - The type of state the Bloc manages.
+ *
+ * @param {CreateBlocProps<Event, State>} props - The properties used to initialize the Bloc.
+ * @returns {Bloc<Event, State>} The created and managed Bloc instance.
+ *
+ * @example
+ * ```typescript
+ * function MyCounterComponent() {
+ *  const bloc = useCreateBloc<CounterBlocEvent, CounterBlocState>({
+ *    initialState: { count: 0 },
+ *    reducer: (state, event) => {
+ *      switch (event.type) {
+ *        case "increment":
+ *          return { count: state.count + 1 };
+ *        case "decrement":
+ *          return { count: state.count - 1 };
+ *        default:
+ *          return state;
+ *      }
+ *    },
+ *  });
+ *
+ *  // Use the bloc for dispatching events and subscribing to state changes
+ *  // (e.g., using another hook like `useBlocState`)
+ *
+ *  return (
+ *    <div>
+ *      <p>Count: {bloc.state.count}</p>
+ *      <button onClick={() => bloc.add({ type: "increment" })}>Increment</button>
+ *    </div>
+ *  );
+ * }
+ *
+ * // Use the bloc for dispatching events and subscribing to state changes
+ * // (e.g., using another hook like `useBlocState`)
+ *
+ * return (
+ * <div>
+ * <p>Count: {bloc.state.count}</p>
+ * <button onClick={() => bloc.add({ type: 'increment' })}>Increment</button>
+ * </div>
+ * );
+ * }
+ * ```
  */
 export function useCreateBloc<Event extends { type: string }, State>(
   props: CreateBlocProps<Event, State>
 ): Bloc<Event, State> {
-  const blocRef = useRef<Bloc<Event, State> | null>(null);
-  // This ref acts as a flag to track if the component has mounted for the "first real time"
-  // (i.e., after Strict Mode's initial double-render cycle).
+  // Memoize the creation of the Bloc instance.
+  // This ensures the Bloc is created only when 'props' change,
+  // providing a stable reference across renders.
+  const bloc = useMemo(() => createBloc<Event, State>(props), [props]);
+
+  // A ref to track if the component has mounted for the first time
+  // in development mode, specifically to handle Strict Mode's double invocation.
   const didMountRef = useRef(false);
 
-  // 1. Bloc Creation (Runs only once per component instance)
-  if (blocRef.current === null) {
-    blocRef.current = createBloc<Event, State>(props);
-  }
-
-  // 2. Effect for Cleanup (Handles Strict Mode's double-invocation)
+  /**
+   * Effect hook to manage the Bloc's lifecycle (cleanup).
+   *
+   * In development (`isDev` is true) and within `React.StrictMode`, `useEffect`
+   * runs its setup, then its cleanup, then its setup again.
+   *
+   * The `didMountRef` is used to skip the cleanup during the *first* simulated
+   * unmount in development. This prevents the Bloc from being prematurely closed
+   * and breaking the development experience, while still allowing actual cleanup
+   * on component unmount in production or the final cleanup in development.
+   *
+   * @remarks
+   * The `[bloc]` dependency ensures that if the Bloc instance itself were to change
+   * (e.g., if `useMemo` somehow created a new instance due to `props` changing,
+   * though `useMemo` aims for stability), the cleanup function would correctly
+   * target the latest Bloc.
+   */
   useEffect(() => {
-    const currentBloc = blocRef.current!; // Guaranteed to be non-null here
-
-    // This block runs on the *first* invocation of the effect after mount.
-    // In Strict Mode, this is the "simulated mount."
-    if (!didMountRef.current) {
-      didMountRef.current = true; // Mark that we've passed the initial mount phase
-
-      // Return a cleanup function for the first pass.
-      // In Strict Mode, this cleanup is called immediately.
-      // We explicitly do *not* close the bloc here.
-      return () => {
-        // No action here. The actual close happens in the *next* cleanup.
-      };
+    if (isDev && !didMountRef.current) {
+      // In development, on the very first mount (when Strict Mode might run setup-cleanup-setup),
+      // we mark that it has mounted and return an empty cleanup function.
+      // This prevents the Bloc from being closed during Strict Mode's simulated unmount,
+      // which would otherwise break the Bloc's functionality immediately in dev.
+      didMountRef.current = true;
+      return () => {}; // Return a no-op cleanup for the first simulated unmount
     } else {
-      // This block runs on the *second* invocation of the effect after mount (in Strict Mode),
-      // or the single invocation in a production environment.
-
-      // Return the cleanup function that should *actually* close the bloc.
-      return () => {
-        currentBloc.close(); // This is the only time the bloc is truly closed by this hook.
-        blocRef.current = null; // Optional: Clear the ref on final unmount
-      };
+      // In production, or on subsequent effect runs in development (after the initial Strict Mode dance),
+      // we return the actual bloc.close function to handle proper cleanup when the component unmounts.
+      return bloc.close;
     }
-  }, []); // Empty dependency array: ensures this effect runs once per component instance.
+  }, [bloc]); // Dependency array: Ensures effect re-runs if 'bloc' instance changes.
 
-  return blocRef.current!;
+  // Return the stable Bloc instance for use within the component.
+  return bloc;
 }
