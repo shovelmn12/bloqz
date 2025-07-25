@@ -1,6 +1,7 @@
 export {
   useMemo,
   useEffect,
+  useCallback,
   useSyncExternalStore,
   createContext,
   useRef,

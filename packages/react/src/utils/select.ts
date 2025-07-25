@@ -1,7 +1,8 @@
-import { Context, useSyncExternalStore } from "./react.js";
+import { Context, useSyncExternalStore, useCallback, useRef } from "./react.js";
 import { useBloc } from "./use.js";
-import { map, distinctUntilChanged } from "./stream.js";
+import { map, distinctUntilChanged, BehaviorSubject } from "./stream.js";
 import { Bloc } from "@bloc/core";
+import { isEqual } from "lodash";
 
 /**
  * A React Hook that subscribes to the state stream (`state$`) of a Bloc provided
@@ -53,31 +54,35 @@ export function useBlocSelectState<Event, State, T>(
 ): T {
   // 1. Get the Bloc instance from the provided context
   const bloc = useBloc(context);
+  const ref = useRef<BehaviorSubject<T>>(
+    new BehaviorSubject<T>(selector(bloc.state))
+  );
 
   // 2. Use useSyncExternalStore to subscribe and select
-  const state = useSyncExternalStore(
+  const state = useSyncExternalStore<T>(
     // subscribe: Subscribe to the original state stream, but pipe the selector
     // through an RxJS map operator BEFORE subscribing React's change listener.
     // This ensures React is only notified when the *selected* value potentially changes.
-    (onStoreChange) => {
-      // console.log('useBlocSelectState: Subscribing with selector'); // Debugging
-      const subscription = bloc.state$
-        .pipe(
-          // Apply the selector transformation within the stream
-          map(selector),
-          distinctUntilChanged()
-        )
-        .subscribe(onStoreChange); // Subscribe React's listener to the *mapped* stream
+    useCallback(
+      (onStoreChange) => {
+        ref.current = new BehaviorSubject<T>(selector(bloc.state));
 
-      return () => {
-        // console.log('useBlocSelectState: Unsubscribing'); // Debugging
-        subscription.unsubscribe();
-      };
-    },
+        const subject = ref.current;
+        const subscription1 = bloc.state$
+          .pipe(map(selector), distinctUntilChanged(isEqual))
+          .subscribe((state) => subject.next(state));
+        const subscription = subject.subscribe(onStoreChange);
+
+        return () => {
+          subscription1.unsubscribe();
+          subscription.unsubscribe();
+          ref.current.complete();
+        };
+      },
+      [bloc, ref]
+    ),
     // getSnapshot: Get the current full state and apply the selector synchronously.
-    () => selector(bloc.state),
-    // getServerSnapshot: Get the server state and apply the selector synchronously.
-    () => selector(bloc.state)
+    useCallback(() => ref.current.value, [ref])
   );
 
   // 3. Return the latest selected state

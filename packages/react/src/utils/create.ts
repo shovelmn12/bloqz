@@ -99,7 +99,9 @@ export function useCreateBloc<Event extends { type: string }, State>(
     } else {
       // In production, or on subsequent effect runs in development (after the initial Strict Mode dance),
       // we return the actual bloc.close function to handle proper cleanup when the component unmounts.
-      return bloc.close;
+      return () => {
+        bloc.close();
+      };
     }
   }, [bloc]); // Dependency array: Ensures effect re-runs if 'bloc' instance changes.
 
