@@ -6,6 +6,12 @@
  */
 export interface BlocContext<State> {
   /**
+   * A unique identifier for this specific Bloc instance. Useful for debugging,
+   * logging, or distinguishing between multiple Blocs of the same type.
+   */
+  readonly id: string;
+
+  /**
    * A read-only snapshot of the Bloc's state at the time the event handler
    * started processing. Use this to make decisions based on the current state.
    */

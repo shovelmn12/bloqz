@@ -22,8 +22,7 @@ import {
   CreateBlocProps,
   ErrorHandler,
 } from "../models/index.js";
-
-let i = 0;
+import { generateShortID } from "./id.js";
 
 // Assuming defaultTransformer and other required functions/types are defined or imported
 // e.g., sequential, concurrent, restartable, droppable if used in examples/defaults
@@ -306,7 +305,10 @@ export function createBloc<Event extends { type: string }, State>(
             Promise.resolve().then(() => {
               // Create the context for the handler with a fresh state snapshot.
               const context: BlocContext<State> = {
-                value: _stateSubject.getValue(), // Fresh state value for handler context
+                id: bloc.id,
+                get value(): State {
+                  return _stateSubject.getValue(); // Fresh state value for handler context
+                },
                 update: updateState,
               };
               // Execute the user's handler function.
@@ -393,7 +395,7 @@ export function createBloc<Event extends { type: string }, State>(
   // --- Create the Public API Object (without `on`) ---
   /** @internal The public Bloc instance. */
   const bloc: Bloc<Event, State> = {
-    id: `${i++}`,
+    id: props.id ?? generateShortID(),
     state$: _stateSubject.asObservable().pipe(shareReplay(1)),
     get state() {
       return getState();
