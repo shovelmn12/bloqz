@@ -1,4 +1,3 @@
-import { boolean } from "fp-ts";
 import { Observable, EMPTY as EMPTY_STREAM } from "../utils/stream.js";
 
 /**
@@ -93,6 +92,13 @@ export interface Bloc<Event, State> {
   readonly isClosed: boolean;
 }
 
+/**
+ * A constant `Bloc` instance that serves as a "no-op" or null object.
+ * It provides empty streams and dummy methods that do nothing.
+ * This is useful for initializing variables to a safe, non-null value
+ * or as a placeholder when a Bloc is not yet available, preventing
+ * runtime errors.
+ */
 export const EMPTY = {
   id: "EMPTY",
   state$: EMPTY_STREAM,

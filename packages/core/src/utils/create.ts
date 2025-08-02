@@ -20,6 +20,7 @@ import {
   EventTypeIdentifier,
   Bloc,
   CreateBlocProps,
+  CreatePipeBlocProps,
   ErrorHandler,
 } from "../models/index.js";
 import { generateShortID } from "./id.js";
@@ -409,5 +410,139 @@ export function createBloc<Event extends { type: string }, State>(
   };
 
   // Return the constructed Bloc instance.
+  return bloc;
+}
+
+/**
+ * Creates a Bloc instance that pipes state from an external source Observable.
+ *
+ * This is a special type of Bloc that does not process events. Its state is
+ * driven entirely by an observable stream provided during creation. The
+ * `add` method is a no-op, and the `errors$` stream is always empty.
+ *
+ * It is useful for wrapping an existing reactive state source (like a
+ * database listener or another stream) with the standard `Bloc` interface,
+ * allowing it to be used in a Bloc-centric architecture.
+ *
+ * @export
+ * @template Event A generic type for events. Since this Bloc doesn't handle them,
+ * it can be a simple `unknown` or `void`.
+ * @template State The type representing the state managed by this Bloc.
+ * @param {CreatePipeBlocProps<State, Event>} props The props object containing
+ * the source observable and an optional ID.
+ * @returns {Bloc<Event, State>} A Bloc instance that pipes states from the
+ * source stream.
+ * @example
+ * // Create a source stream, e.g., a timer
+ * const timer$ = interval(1000).pipe(map(i => ({ value: i })));
+ *
+ * // Create a pipe bloc that listens to the timer
+ * const timerBloc = createPipeBloc({ source$: timer$ });
+ *
+ * timerBloc.state$.subscribe(state => {
+ * console.log('Current state:', state); // Logs { value: 0 }, { value: 1 }, etc.
+ * });
+ *
+ * // The `add` method is a no-op
+ * timerBloc.add({ type: 'NO_OP' });
+ *
+ * // Remember to close the bloc to prevent memory leaks
+ * setTimeout(() => timerBloc.close(), 5000);
+ */
+export function createPipeBloc<Event, State>(
+  props: CreatePipeBlocProps<State>
+): Bloc<Event, State> {
+  // --- Destructure properties from props ---
+  const { source$, id } = props;
+
+  // --- Private State & Subjects (managed by closure) ---
+  /**
+   * The `BehaviorSubject` that will hold the current state.
+   * Its initial value is derived from the first value of the source$ stream
+   * or a default `undefined` if the source is an empty observable.
+   * We will need to subscribe to the source to get this value.
+   * @internal
+   */
+  const _stateSubject = new BehaviorSubject<State>(props.initialState);
+
+  /** @internal A boolean flag to track if the bloc has been closed. */
+  let _isClosed = false;
+
+  /**
+   * The subscription to the source stream. This needs to be stored so we can
+   * unsubscribe from it when the bloc is closed.
+   * @internal
+   */
+  const _sourceSubscription = source$.subscribe({
+    next: (value) => _stateSubject.next(value),
+    error: (err) => {
+      // In a pipe bloc, the source stream's errors are considered fatal.
+      console.error("PipeBloc: Source stream terminated with an error:", err);
+      // The `errors$` stream is empty, so we just log and close.
+      close();
+    },
+    complete: () => {
+      // If the source stream completes, we also close the bloc.
+      if (!_stateSubject) {
+        // Handle the case where the source completes before emitting any value
+        // We'll create a BehaviorSubject with a default value and then complete it.
+        // This behavior might need refinement depending on user expectations.
+        // For now, let's just log and close, as the `state` would never be set.
+        console.warn(
+          "PipeBloc: Source stream completed without emitting any state."
+        );
+      }
+      close();
+    },
+  });
+
+  // --- Event Dispatch (`add` method) ---
+  /**
+   * The `add` method for a `createPipeBloc` is a no-op. It simply logs a warning
+   * because this type of Bloc is not designed to process events.
+   * @internal
+   */
+  const add = (event: Event): void => {
+    if (!_isClosed) {
+      console.warn(
+        "Bloc: Attempted to add event to a PipeBloc. Events are not handled by this type of bloc."
+      );
+    }
+  };
+
+  // --- Cleanup (`close` method) ---
+  /** @internal */
+  const close = (): void => {
+    if (_isClosed) return;
+    _isClosed = true;
+
+    // Unsubscribe from the source stream to stop receiving updates.
+    _sourceSubscription.unsubscribe();
+
+    // Complete the state subject to signal completion to all subscribers.
+    _stateSubject.complete();
+    // No event or error subjects to complete as they are empty.
+  };
+
+  // --- Create the Public API Object ---
+  const bloc: Bloc<Event, State> = {
+    id: id ?? generateShortID(),
+    state$: _stateSubject.asObservable().pipe(
+      shareReplay(1),
+      // Finalize is added here to ensure the source subscription is cleaned up
+      // if the state$ observable is completed by the `close()` method.
+      finalize(() => _sourceSubscription.unsubscribe())
+    ),
+    get state() {
+      return _stateSubject.getValue();
+    },
+    errors$: EMPTY as Observable<{ event: Event; error: unknown }>, // A pipe bloc has no events or handlers to produce errors.
+    add,
+    close,
+    get isClosed() {
+      return _isClosed;
+    },
+  };
+
   return bloc;
 }

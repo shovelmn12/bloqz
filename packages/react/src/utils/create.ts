@@ -1,74 +1,91 @@
 import { useRef, useEffect, useMemo } from "./react.js";
-import { createBloc, Bloc, CreateBlocProps } from "@bloc/core";
+import {
+  createBloc,
+  createPipeBloc,
+  Bloc,
+  CreateBlocProps,
+  CreatePipeBlocProps,
+} from "@bloc/core";
 
 const isDev = process.env.NODE_ENV === "development";
 
 /**
+ * A type guard to determine if a props object is for an event-driven Bloc.
+ * @internal
+ * @param props The props object to check.
+ * @returns {boolean} True if the props contain a `handlers` property.
+ */
+function isCreateBlocProps<Event, State>(
+  props: CreateBlocProps<Event, State> | CreatePipeBlocProps<State>
+): props is CreateBlocProps<Event, State> {
+  return "handlers" in props;
+}
+
+/**
  * A React Hook for creating and managing a Bloc instance within a component's lifecycle.
  *
- * This hook ensures that a Bloc instance is created once for the component and
+ * This hook unifies the creation of both event-driven Blocs (using `createBloc`)
+ * and stream-driven Blocs (using `createPipeBloc`) into a single function.
+ *
+ * It ensures that a Bloc instance is created once for the component and
  * automatically handles its closure when the component unmounts.
  *
- * In `React.StrictMode` development mode, this hook includes specific logic
- * to mitigate the effects of the double-rendering and simulated unmounts that
- * Strict Mode performs, ensuring the Bloc remains functional during development.
- *
- * @template Event - The type of events the Bloc can process. Must extend `{ type: string }`.
+ * @template Event - The type of events the Bloc can process.
  * @template State - The type of state the Bloc manages.
  *
- * @param {CreateBlocProps<Event, State>} props - The properties used to initialize the Bloc.
+ * @param {CreateBlocProps<Event, State> | CreatePipeBlocProps<State, Event>} props
+ * The properties used to initialize the Bloc. The hook automatically detects
+ * whether to create an event-driven or stream-driven Bloc based on the props.
+ *
  * @returns {Bloc<Event, State>} The created and managed Bloc instance.
  *
  * @example
- * ```typescript
+ * // Example using event-driven props (creates a standard Bloc)
  * function MyCounterComponent() {
- *  const bloc = useCreateBloc<CounterBlocEvent, CounterBlocState>({
- *    initialState: { count: 0 },
- *    reducer: (state, event) => {
- *      switch (event.type) {
- *        case "increment":
- *          return { count: state.count + 1 };
- *        case "decrement":
- *          return { count: state.count - 1 };
- *        default:
- *          return state;
- *      }
- *    },
- *  });
- *
- *  // Use the bloc for dispatching events and subscribing to state changes
- *  // (e.g., using another hook like `useBlocState`)
- *
- *  return (
- *    <div>
- *      <p>Count: {bloc.state.count}</p>
- *      <button onClick={() => bloc.add({ type: "increment" })}>Increment</button>
- *    </div>
- *  );
+ * const counterBloc = useCreateBloc<CounterEvent, CounterState>({
+ * initialState: { count: 0 },
+ * handlers: {
+ * increment: (event, { update }) => update(s => ({ ...s, count: s.count + 1 })),
+ * },
+ * });
+ * // ... use counterBloc
  * }
  *
- * // Use the bloc for dispatching events and subscribing to state changes
- * // (e.g., using another hook like `useBlocState`)
- *
- * return (
- * <div>
- * <p>Count: {bloc.state.count}</p>
- * <button onClick={() => bloc.add({ type: 'increment' })}>Increment</button>
- * </div>
- * );
+ * // Example using stream-driven props (creates a Pipe Bloc)
+ * function MyTimerComponent() {
+ * const timerBloc = useBloc<TimerState, unknown>({
+ * source$: interval(1000).pipe(map(i => ({ value: i }))),
+ * });
+ * // ... use timerBloc
  * }
- * ```
  */
-export function useCreateBloc<Event extends { type: string }, State>(
+export function useCreateBloc<Event, State>(
   props: CreateBlocProps<Event, State>
+): Bloc<Event, State>;
+
+export function useCreateBloc<State, Event>(
+  props: CreatePipeBlocProps<State>
+): Bloc<Event, State>;
+
+export function useCreateBloc<Event extends { readonly type: string }, State>(
+  props: CreateBlocProps<Event, State> | CreatePipeBlocProps<State>
 ): Bloc<Event, State> {
   // Memoize the creation of the Bloc instance.
-  // This ensures the Bloc is created only when 'props' change,
-  // providing a stable reference across renders.
-  const bloc = useMemo(() => createBloc<Event, State>(props), [props]);
+  // We use a factory function inside useMemo to dynamically create the correct
+  // type of Bloc based on the provided props.
+  const bloc = useMemo(() => {
+    // Check if the props are for a standard Bloc by looking for the 'handlers' property.
+    if (isCreateBlocProps(props)) {
+      // Create a standard Bloc for handling events.
+      return createBloc<Event & { type: string }, State>(props);
+    } else {
+      // Otherwise, create a Pipe Bloc for piping a stream.
+      return createPipeBloc<Event, State>(props);
+    }
+  }, [props]); // The dependency array ensures a new Bloc is created only if props change.
 
-  // A ref to track if the component has mounted for the first time
-  // in development mode, specifically to handle Strict Mode's double invocation.
+  // A ref to track if the component has mounted for the first time.
+  // This is specifically to handle React.StrictMode's double invocation in development.
   const didMountRef = useRef(false);
 
   /**
@@ -81,29 +98,21 @@ export function useCreateBloc<Event extends { type: string }, State>(
    * unmount in development. This prevents the Bloc from being prematurely closed
    * and breaking the development experience, while still allowing actual cleanup
    * on component unmount in production or the final cleanup in development.
-   *
-   * @remarks
-   * The `[bloc]` dependency ensures that if the Bloc instance itself were to change
-   * (e.g., if `useMemo` somehow created a new instance due to `props` changing,
-   * though `useMemo` aims for stability), the cleanup function would correctly
-   * target the latest Bloc.
    */
   useEffect(() => {
     if (isDev && !didMountRef.current) {
       // In development, on the very first mount (when Strict Mode might run setup-cleanup-setup),
       // we mark that it has mounted and return an empty cleanup function.
-      // This prevents the Bloc from being closed during Strict Mode's simulated unmount,
-      // which would otherwise break the Bloc's functionality immediately in dev.
       didMountRef.current = true;
-      return () => {}; // Return a no-op cleanup for the first simulated unmount
+      return () => {};
     } else {
-      // In production, or on subsequent effect runs in development (after the initial Strict Mode dance),
-      // we return the actual bloc.close function to handle proper cleanup when the component unmounts.
+      // In production, or on subsequent effect runs in development,
+      // we return the actual `bloc.close` function to handle proper cleanup when the component unmounts.
       return () => {
         bloc.close();
       };
     }
-  }, [bloc]); // Dependency array: Ensures effect re-runs if 'bloc' instance changes.
+  }, [bloc]);
 
   // Return the stable Bloc instance for use within the component.
   return bloc;
