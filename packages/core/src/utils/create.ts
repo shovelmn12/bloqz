@@ -450,7 +450,7 @@ export function createBloc<Event extends { type: string }, State>(
  * setTimeout(() => timerBloc.close(), 5000);
  */
 export function createPipeBloc<Event, State>(
-  props: CreatePipeBlocProps<State>
+  props: CreatePipeBlocProps<Event, State>
 ): Bloc<Event, State> {
   // --- Destructure properties from props ---
   const { source$, id } = props;

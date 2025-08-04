@@ -16,7 +16,7 @@ const isDev = process.env.NODE_ENV === "development";
  * @returns {boolean} True if the props contain a `handlers` property.
  */
 function isCreateBlocProps<Event, State>(
-  props: CreateBlocProps<Event, State> | CreatePipeBlocProps<State>
+  props: CreateBlocProps<Event, State> | CreatePipeBlocProps<Event, State>
 ): props is CreateBlocProps<Event, State> {
   return "handlers" in props;
 }
@@ -64,11 +64,11 @@ export function useCreateBloc<Event, State>(
 ): Bloc<Event, State>;
 
 export function useCreateBloc<State, Event>(
-  props: CreatePipeBlocProps<State>
+  props: CreatePipeBlocProps<Event, State>
 ): Bloc<Event, State>;
 
 export function useCreateBloc<Event extends { readonly type: string }, State>(
-  props: CreateBlocProps<Event, State> | CreatePipeBlocProps<State>
+  props: CreateBlocProps<Event, State> | CreatePipeBlocProps<Event, State>
 ): Bloc<Event, State> {
   // Memoize the creation of the Bloc instance.
   // We use a factory function inside useMemo to dynamically create the correct

@@ -41,7 +41,7 @@ export interface CreateBlocProps<Event, State> {
  * it can be a simple `unknown` or `void`.
  * @template State The type representing the state managed by this Bloc.
  */
-export interface CreatePipeBlocProps<State> {
+export interface CreatePipeBlocProps<Event, State> {
   /**
    * An optional, unique identifier for this specific Bloc instance.
    * If not provided, a unique ID will be automatically generated.
