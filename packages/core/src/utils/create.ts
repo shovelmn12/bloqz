@@ -6,7 +6,6 @@ import {
   mergeMap,
   groupBy,
   tap,
-  shareReplay,
   EMPTY,
   catchError,
   finalize,
@@ -397,7 +396,7 @@ export function createBloc<Event extends { type: string }, State>(
   /** @internal The public Bloc instance. */
   const bloc: Bloc<Event, State> = {
     id: props.id ?? generateShortID(),
-    state$: _stateSubject.asObservable().pipe(shareReplay(1)),
+    state$: _stateSubject.asObservable(),
     get state() {
       return getState();
     },
@@ -527,12 +526,7 @@ export function createPipeBloc<Event, State>(
   // --- Create the Public API Object ---
   const bloc: Bloc<Event, State> = {
     id: id ?? generateShortID(),
-    state$: _stateSubject.asObservable().pipe(
-      shareReplay(1),
-      // Finalize is added here to ensure the source subscription is cleaned up
-      // if the state$ observable is completed by the `close()` method.
-      finalize(() => _sourceSubscription.unsubscribe())
-    ),
+    state$: _stateSubject.asObservable(),
     get state() {
       return _stateSubject.getValue();
     },
