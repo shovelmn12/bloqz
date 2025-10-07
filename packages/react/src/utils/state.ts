@@ -1,6 +1,6 @@
 import { Context, useSyncExternalStore } from "./react.js";
 import { useBloc } from "./use.js";
-import { Bloc } from "@bloc/core";
+import { Bloc } from "@bloqz/core";
 
 /**
  * A React Hook that subscribes to the state stream (`state$`) of a Bloc provided
@@ -22,7 +22,7 @@ import { Bloc } from "@bloc/core";
  * @example
  * // MyCounterDisplay.tsx
  * import React from 'react';
- * import { useBlocState } from '@bloc/react';
+ * import { useBlocState } from '@bloqz/react';
  * import { CounterBlocContext } from './counter.context';
  *
  * function MyCounterDisplay() {

@@ -1,6 +1,6 @@
-# Functional Bloc Core (@bloc/core)
+# Functional Bloc Core (@bloqz/core)
 
-[![npm version](https://badge.fury.io/js/%40bloc%2Fcore.svg)](https://badge.fury.io/js/%40bloc%2Fcore) <!-- Replace with your actual badge URL if published -->
+[![npm version](https://badge.fury.io/js/%40bloqz%2Fcore.svg)](https://badge.fury.io/js/%40bloqz%2Fcore) <!-- Replace with your actual badge URL if published -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- Add other badges like build status, coverage etc. if applicable -->
 
@@ -22,9 +22,9 @@ This core package provides the main `createBloc` factory, type definitions, and 
 ## Installation
 
 ```bash
-npm install @bloc/core
+npm install @bloqz/core
 # or
-yarn add @bloc/core
+yarn add @bloqz/core
 ```
 
 **Note:** This package relies on `rxjs` as a peer dependency. You need to have it installed in your project.
@@ -37,14 +37,14 @@ yarn add @bloc/core
 *   **Handlers Object:** A configuration object passed to `createBloc` where keys are the string literal `type` of the events, and values define the corresponding `EventHandler` function and optionally an `EventTransformer`.
 *   **EventHandler:** A function (`EventHandlerFunction`) or object (`EventHandlerObject`) defining the logic to execute for a specific event type. It receives the `event` and a `BlocContext`.
 *   **BlocContext:** An object passed to event handlers containing the current state `value` and an `update` function to change the state.
-*   **EventTransformer:** A higher-order function (using RxJS operators) that controls the concurrency behavior of an `EventHandler`. Standard transformers (like `sequential`, `restartable`) are expected to be provided by a separate package (e.g., `@bloc/concurrency`).
+*   **EventTransformer:** A higher-order function (using RxJS operators) that controls the concurrency behavior of an `EventHandler`. Standard transformers (like `sequential`, `restartable`) are expected to be provided by a separate package (e.g., `@bloqz/concurrency`).
 
 ## Basic Usage
 
 ```typescript
-import { createBloc, BlocErrorHandler } from '@bloc/core';
-// Assumes transformers like sequential, restartable are imported from @bloc/concurrency or elsewhere
-import { sequential, restartable } from '@bloc/concurrency'; // Example import
+import { createBloc, BlocErrorHandler } from '@bloqz/core';
+// Assumes transformers like sequential, restartable are imported from @bloqz/concurrency or elsewhere
+import { sequential, restartable } from '@bloqz/concurrency'; // Example import
 import { shareReplay } from 'rxjs';
 
 // 1. Define State Interface
@@ -163,7 +163,7 @@ The public API of a Bloc instance created by this package.
 Concurrency is managed per event type via the optional `transformer` property within the `EventHandlerObject` in the `handlers` map.
 
 *   If a handler is provided directly as a function, or the `transformer` property is omitted from the object, the **default transformer (`concurrent`)** is used.
-*   To use specific strategies (like `sequential`, `restartable`, `droppable`), provide an `EventHandlerObject` in the `handlers` map and set its `transformer` property to the desired function (likely imported from `@bloc/concurrency` or a similar utility package).
+*   To use specific strategies (like `sequential`, `restartable`, `droppable`), provide an `EventHandlerObject` in the `handlers` map and set its `transformer` property to the desired function (likely imported from `@bloqz/concurrency` or a similar utility package).
 
 ## Limitations
 

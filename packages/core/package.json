@@ -1,9 +1,10 @@
 {
-  "name": "@bloc/core",
+  "name": "@bloqz/core",
   "version": "1.0.0",
   "description": "Core package for the functional Bloc state management library.",
   "keywords": [
     "bloc",
+    "bloqz",
     "state management",
     "functional",
     "rxjs",

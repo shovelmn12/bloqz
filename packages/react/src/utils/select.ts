@@ -1,7 +1,7 @@
 import { Context, useSyncExternalStore, useCallback, useRef } from "./react.js";
 import { useBloc } from "./use.js";
 import { map, distinctUntilChanged } from "./stream.js";
-import { Bloc } from "@bloc/core";
+import { Bloc } from "@bloqz/core";
 import { isEqual } from "lodash";
 
 /**
@@ -42,7 +42,7 @@ import { isEqual } from "lodash";
  * @example
  * // MyCounterStatusDisplay.tsx
  * import React, { useCallback } from 'react';
- * import { useBlocSelectState } from '@bloc/react';
+ * import { useBlocSelectState } from '@bloqz/react';
  * import { CounterBlocContext, CounterState } from './counter.context';
  *
  * function MyCounterStatusDisplay() {

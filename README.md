@@ -1,14 +1,14 @@
-# bloc.js - Functional Bloc Pattern for JS/TS
+# bloqz.js - Functional Bloc Pattern for JS/TS
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- Add other relevant badges: build status, test coverage, npm versions for each package -->
-<!-- [![npm version (@bloc/core)](https://badge.fury.io/js/%40bloc%2Fcore.svg)](https://badge.fury.io/js/%40bloc%2Fcore) -->
-<!-- [![npm version (@bloc/react)](https://badge.fury.io/js/%40bloc%2Freact.svg)](https://badge.fury.io/js/%40bloc%2Freact) -->
-<!-- [![npm version (@bloc/concurrency)](https://badge.fury.io/js/%40bloc%2Fconcurrency.svg)](https://badge.fury.io/js/%40bloc%2Fconcurrency) -->
+<!-- [![npm version (@bloqz/core)](https://badge.fury.io/js/%40bloqz%2Fcore.svg)](https://badge.fury.io/js/%40bloqz%2Fcore) -->
+<!-- [![npm version (@bloqz/react)](https://badge.fury.io/js/%40bloqz%2Freact.svg)](https://badge.fury.io/js/%40bloqz%2Freact) -->
+<!-- [![npm version (@bloqz/concurrency)](https://badge.fury.io/js/%40bloqz%2Fconcurrency.svg)](https://badge.fury.io/js/%40bloqz%2Fconcurrency) -->
 
 A lightweight, functional implementation of the Bloc pattern for state management in JavaScript and TypeScript applications. Inspired by flutter_bloc, built with TypeScript and RxJS. Designed for predictability, testability, and composability.
 
-This project provides a core engine (`@bloc/core`), React integration hooks (`@bloc/react`), and standard concurrency utilities (`@bloc/concurrency`).
+This project provides a core engine (`@bloqz/core`), React integration hooks (`@bloqz/react`), and standard concurrency utilities (`@bloqz/concurrency`).
 
 ## Core Philosophy
 
@@ -20,46 +20,46 @@ This project provides a core engine (`@bloc/core`), React integration hooks (`@b
 
 ## Features
 
-*   **Functional Core (`@bloc/core`):** `createBloc` factory for building Blocs.
-*   **Reactive Streams (`@bloc/core`):** `state$` and `errors$` Observables via RxJS.
-*   **Type Safety (`@bloc/core`):** Strong typing for Events, States, Handlers, and context.
-*   **Upfront Handler Definition (`@bloc/core`):** Event handlers are defined declaratively on Bloc creation.
-*   **Configurable Concurrency (`@bloc/core`, `@bloc/concurrency`):** Specify event processing strategies (sequential, concurrent, restartable, droppable) per handler.
-*   **React Integration (`@bloc/react`):** Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) for easy integration with React components.
-*   **Automatic Cleanup (`@bloc/react`):** `useCreateBloc` handles `bloc.close()` automatically.
-*   **Concurrent Mode Ready (`@bloc/react`):** Uses `useSyncExternalStore` for efficient state subscriptions.
-*   **Optimized Re-renders (`@bloc/react`):** `useBlocSelectState` minimizes component updates.
+*   **Functional Core (`@bloqz/core`):** `createBloc` factory for building Blocs.
+*   **Reactive Streams (`@bloqz/core`):** `state$` and `errors$` Observables via RxJS.
+*   **Type Safety (`@bloqz/core`):** Strong typing for Events, States, Handlers, and context.
+*   **Upfront Handler Definition (`@bloqz/core`):** Event handlers are defined declaratively on Bloc creation.
+*   **Configurable Concurrency (`@bloqz/core`, `@bloqz/concurrency`):** Specify event processing strategies (sequential, concurrent, restartable, droppable) per handler.
+*   **React Integration (`@bloqz/react`):** Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) for easy integration with React components.
+*   **Automatic Cleanup (`@bloqz/react`):** `useCreateBloc` handles `bloc.close()` automatically.
+*   **Concurrent Mode Ready (`@bloqz/react`):** Uses `useSyncExternalStore` for efficient state subscriptions.
+*   **Optimized Re-renders (`@bloqz/react`):** `useBlocSelectState` minimizes component updates.
 
 ## Packages
 
 This project is organized into the following packages:
 
-*   **`@bloc/core`**: The core engine. Contains `createBloc`, fundamental type definitions (`Bloc`, `EventHandler`, `BlocContext`, etc.), and the RxJS-based event processing pipeline. It's framework-agnostic.
-*   **`@bloc/react`**: Provides React Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) and utilities for integrating Blocs seamlessly into React applications using Context.
-*   **`@bloc/concurrency`**: Exports standard `EventTransformer` functions (`sequential`, `concurrent`, `restartable`, `droppable`) for use with `@bloc/core`.
+*   **`@bloqz/core`**: The core engine. Contains `createBloc`, fundamental type definitions (`Bloc`, `EventHandler`, `BlocContext`, etc.), and the RxJS-based event processing pipeline. It's framework-agnostic.
+*   **`@bloqz/react`**: Provides React Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) and utilities for integrating Blocs seamlessly into React applications using Context.
+*   **`@bloqz/concurrency`**: Exports standard `EventTransformer` functions (`sequential`, `concurrent`, `restartable`, `droppable`) for use with `@bloqz/core`.
 
 ## Installation
 
-Install the necessary packages for your setup. Typically, you'll need `@bloc/core`, `rxjs`, and if using React, also `@bloc/react`, `react`, and potentially `@bloc/concurrency`.
+Install the necessary packages for your setup. Typically, you'll need `@bloqz/core`, `rxjs`, and if using React, also `@bloqz/react`, `react`, and potentially `@bloqz/concurrency`.
 
 ```bash
 # For a React project
-npm install @bloc/react
+npm install @bloqz/react
 # or
-yarn add @bloc/react
+yarn add @bloqz/react
 
 # For non-React usage (core only)
-npm install @bloc/core
+npm install @bloqz/core
 # or
-yarn add @bloc/core
+yarn add @bloqz/core
 ```
 
 ## Peer Dependencies
 
-*   `@bloc/react` requires `react` (v18+).
-*   `@bloc/concurrency` requires `@bloc/core`.
+*   `@bloqz/react` requires `react` (v18+).
+*   `@bloqz/concurrency` requires `@bloqz/core`.
 
-## Core Concepts (`@bloc/core`)
+## Core Concepts (`@bloqz/core`)
 
 *   **Bloc:** Created by `createBloc`. Manages `State`, processes `Event`s via pre-defined `handlers`.
 *   **State:** Immutable data representing the current state.
@@ -70,7 +70,7 @@ yarn add @bloc/core
 *   **`BlocContext`:** Provides `value` (current state snapshot) and `update` (function to change state) to handlers.
 *   **`EventTransformer`:** Controls concurrency (how handlers for the same event type run relative to each other).
 
-## React Integration (`@bloc/react`)
+## React Integration (`@bloqz/react`)
 
 *   **`React.createContext`:** Use React's standard function to create a typed context (`Context<Bloc | null>`).
 *   **`useCreateBloc`:** Hook to create a stable, auto-closing Bloc instance within a component (ideal for providers).
@@ -79,7 +79,7 @@ yarn add @bloc/core
 *   **`useBlocState`:** Hook to subscribe to the entire state and re-render on changes.
 *   **`useBlocSelectState`:** Hook to subscribe to a slice/derived value of the state, optimizing re-renders.
 
-## Concurrency (`@bloc/concurrency`)
+## Concurrency (`@bloqz/concurrency`)
 
 *   Provides standard `EventTransformer` functions (`sequential`, `concurrent`, `restartable`, `droppable`) to be used in the `handlers` configuration when creating a Bloc.
 
@@ -87,7 +87,7 @@ yarn add @bloc/core
 
 ```typescript
 // --- 1. Define Types (types.ts) ---
-import { EventHandlersObject, CreateBlocProps, Bloc } from '@bloc/core';
+import { EventHandlersObject, CreateBlocProps, Bloc } from '@bloqz/core';
 import { Context } from 'react';
 
 export interface CounterState { count: number; }
@@ -110,7 +110,7 @@ export const CounterContext = createContext<Bloc<CounterEvent, CounterState> | n
 
 // --- 3. Create Provider (CounterProvider.tsx) ---
 import React from 'react';
-import { useCreateBloc } from '@bloc/react';
+import { useCreateBloc } from '@bloqz/react';
 import { CounterContext } from './counter.context';
 import { counterBlocProps, CounterEvent, CounterState } from './types';
 
@@ -125,7 +125,7 @@ function CounterProvider({ children }) {
 
 // --- 4. Use in Components (CounterDisplay.tsx) ---
 import React from 'react';
-import { useBlocState } from '@bloc/react';
+import { useBlocState } from '@bloqz/react';
 import { CounterContext } from './counter.context';
 
 function CounterDisplay() {
@@ -135,7 +135,7 @@ function CounterDisplay() {
 
 // --- 5. Use in Components (CounterButtons.tsx) ---
 import React from 'react';
-import { useBloc } from '@bloc/react';
+import { useBloc } from '@bloqz/react';
 import { CounterContext } from './counter.context';
 
 function CounterButtons() {
@@ -167,7 +167,7 @@ function App() {
 
 ## API Documentation
 
-### `@bloc/core`
+### `@bloqz/core`
 
 #### `createBloc<Event, State>(props: CreateBlocProps<Event, State>): Bloc<Event, State>`
 
@@ -196,11 +196,11 @@ function App() {
 *   `EventTransformer`: `(project) => OperatorFunction` for concurrency.
 *   `EventTypeIdentifier`: Internal type (primarily string for this API).
 
-### `@bloc/react`
+### `@bloqz/react`
 
 #### `useCreateBloc<Event, State>(props): Bloc<Event, State>`
 
-*   Creates a memoized Bloc instance using `@bloc/core`'s `createBloc`.
+*   Creates a memoized Bloc instance using `@bloqz/core`'s `createBloc`.
 *   Automatically calls `bloc.close()` on unmount.
 *   Ideal for use in Context Providers.
 
@@ -222,12 +222,12 @@ function App() {
 
 *(Other hooks like `useBlocPipeState` could be added here if implemented).*
 
-### `@bloc/concurrency`
+### `@bloqz/concurrency`
 
 Exports standard `EventTransformer` functions:
 
 *   `sequential<Event>()`: Processes events one by one (uses `concatMap`).
-*   `concurrent<Event>()`: Processes events in parallel (uses `mergeMap`). **Default if no transformer is specified in `@bloc/core`**.
+*   `concurrent<Event>()`: Processes events in parallel (uses `mergeMap`). **Default if no transformer is specified in `@bloqz/core`**.
 *   `restartable<Event>()`: Processes the latest event, cancels previous (uses `switchMap`).
 *   `droppable<Event>()`: Ignores new events if one is running (uses `exhaustMap`).
 

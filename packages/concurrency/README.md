@@ -1,15 +1,15 @@
-# @bloc/concurrency
+# @bloqz/concurrency
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- Add other relevant badges: npm version, build status, etc. -->
 <!-- npm i -D @types/node -->
-[![npm version](https://badge.fury.io/js/%40bloc%2Fconcurrency.svg)](https://badge.fury.io/js/%40bloc%2Fconcurrency)
+[![npm version](https://badge.fury.io/js/%40bloqz%2Fconcurrency.svg)](https://badge.fury.io/js/%40bloqz%2Fconcurrency)
 
 Concurrency utilities (Event Transformers) for the TypeScript BLoC pattern implementation.
 
 ## Purpose
 
-This package provides helper functions that create standard `EventTransformer` implementations based on common RxJS operators. These transformers are used with the `bloc.on` method (from `@bloc/core` or a similar BLoC implementation) to control how event handlers execute, especially when events are dispatched rapidly or involve asynchronous operations.
+This package provides helper functions that create standard `EventTransformer` implementations based on common RxJS operators. These transformers are used with the `bloc.on` method (from `@bloqz/core` or a similar BLoC implementation) to control how event handlers execute, especially when events are dispatched rapidly or involve asynchronous operations.
 
 Choosing the right concurrency strategy is crucial for preventing race conditions, optimizing performance, and ensuring predictable behavior in reactive applications.
 
@@ -17,28 +17,28 @@ Choosing the right concurrency strategy is crucial for preventing race condition
 
 ```bash
 # Using npm
-npm install @bloc/concurrency rxjs
+npm install @bloqz/concurrency rxjs
 
 # Using yarn
-yarn add @bloc/concurrency rxjs
+yarn add @bloqz/concurrency rxjs
 ```
 
 **Peer Dependencies:**
 
-This package requires `rxjs` as a peer dependency. It's designed to be used with a core BLoC library (like `@bloc/core`) that defines the `EventTransformer` type.
+This package requires `rxjs` as a peer dependency. It's designed to be used with a core BLoC library (like `@bloqz/core`) that defines the `EventTransformer` type.
 
 ## Usage
 
 Import the desired transformer function and provide it to the `options.transformer` property when registering an event handler using `bloc.on`.
 
 ```typescript
-import { createBloc, EventHandler } from '@bloc/core'; // Assuming core package
+import { createBloc, EventHandler } from '@bloqz/core'; // Assuming core package
 import {
   sequential,
   restartable,
   droppable,
   concurrent, // Can be used explicitly, but often the default
-} from '@bloc/concurrency';
+} from '@bloqz/concurrency';
 
 // --- Define your Bloc, State, Event ---
 interface MyState { /* ... */ }
@@ -92,7 +92,7 @@ bloc.on('LOG', handleLog, {
 *   **Default:** This strategy often serves as the **default** in core BLoC implementations if no specific transformer is provided.
 
 ```typescript
-import { concurrent } from '@bloc/concurrency';
+import { concurrent } from '@bloqz/concurrency';
 bloc.on('LOG_EVENT', handleLogToServer, { transformer: concurrent() });
 ```
 
@@ -108,7 +108,7 @@ bloc.on('LOG_EVENT', handleLogToServer, { transformer: concurrent() });
     *   Preventing race conditions when handlers modify the same state properties or interact with resources that require ordered access (e.g., saving data sequentially, managing queues).
 
 ```typescript
-import { sequential } from '@bloc/concurrency';
+import { sequential } from '@bloqz/concurrency';
 bloc.on('SAVE_DATA', handleSave, { transformer: sequential() });
 ```
 
@@ -125,7 +125,7 @@ bloc.on('SAVE_DATA', handleSave, { transformer: sequential() });
     *   Refreshing data where only the latest request should complete.
 
 ```typescript
-import { restartable } from '@bloc/concurrency';
+import { restartable } from '@bloqz/concurrency';
 bloc.on('SEARCH_QUERY_CHANGED', handleSearch, { transformer: restartable() });
 ```
 
@@ -142,7 +142,7 @@ bloc.on('SEARCH_QUERY_CHANGED', handleSearch, { transformer: restartable() });
     *   Simple button debouncing where subsequent clicks during processing should be ignored.
 
 ```typescript
-import { droppable } from '@bloc/concurrency';
+import { droppable } from '@bloqz/concurrency';
 bloc.on('SUBMIT_FORM', handleSubmit, { transformer: droppable() });
 ```
 
@@ -153,7 +153,7 @@ bloc.on('SUBMIT_FORM', handleSubmit, { transformer: droppable() });
 These helpers produce functions matching the `EventTransformer` signature expected by the core BLoC library:
 
 ```typescript
-// Likely defined in @bloc/core or @bloc/types
+// Likely defined in @bloqz/core or @bloqz/types
 type EventTransformer<Event> = (
   project: (event: Event) => ObservableInput<unknown>
 ) => OperatorFunction<Event, unknown>;

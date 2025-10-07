@@ -1,7 +1,7 @@
 import { Context, useSyncExternalStore } from "./preact.js";
 import { useBloc } from "./use.js";
 import { map, distinctUntilChanged } from "./stream.js";
-import { Bloc } from "@bloc/core";
+import { Bloc } from "@bloqz/core";
 
 /**
  * A React Hook that subscribes to the state stream (`state$`) of a Bloc provided
@@ -33,7 +33,7 @@ import { Bloc } from "@bloc/core";
  * @example
  * // MyCounterStatusDisplay.tsx
  * import React, { useCallback } from 'react';
- * import { useBlocSelectState } from '@bloc/react';
+ * import { useBlocSelectState } from '@bloqz/react';
  * import { CounterBlocContext, CounterState } from './counter.context';
  *
  * function MyCounterStatusDisplay() {

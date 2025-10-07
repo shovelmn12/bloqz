@@ -1,5 +1,5 @@
 import { createContext, Context } from "./react.js";
-import { Bloc } from "@bloc/core";
+import { Bloc } from "@bloqz/core";
 
 /**
  * Creates a React Context object typed specifically for holding a Bloc instance
@@ -27,7 +27,7 @@ import { Bloc } from "@bloc/core";
  * @see https://react.dev/reference/react/createContext
  * @example
  * // counter.context.ts
- * import { createBlocContext } from '@bloc/react'; // Or wherever this is defined
+ * import { createBlocContext } from '@bloqz/react'; // Or wherever this is defined
  * import { CounterEvent, CounterState } from './types';
  *
  * // Create the context, potentially with no default Bloc (or undefined)

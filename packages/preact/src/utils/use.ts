@@ -1,5 +1,5 @@
 import { use, Context } from "./preact.js";
-import { Bloc } from "@bloc/core";
+import { Bloc } from "@bloqz/core";
 
 /**
  * A custom React Hook to consume a Bloc instance from a specific Bloc React Context.
@@ -18,7 +18,7 @@ import { Bloc } from "@bloc/core";
  * @example
  * // MyCounterDisplay.tsx
  * import React from 'react';
- * import { useBloc } from '@bloc/react';
+ * import { useBloc } from '@bloqz/react';
  * import { CounterBlocContext } from './counter.context';
  * import { useBlocState } from './useBlocState'; // Assuming a state hook exists
  *
