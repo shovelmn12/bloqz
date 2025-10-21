@@ -5,7 +5,7 @@ import {
   Bloc,
   CreateBlocProps,
   CreatePipeBlocProps,
-} from "@bloc/core";
+} from "@bloqz/core";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -53,7 +53,7 @@ function isCreateBlocProps<Event, State>(
  *
  * // Example using stream-driven props (creates a Pipe Bloc)
  * function MyTimerComponent() {
- * const timerBloc = useBloc<TimerState, unknown>({
+ * const timerBloc = useCreateBloc<TimerState, unknown>({
  * source$: interval(1000).pipe(map(i => ({ value: i }))),
  * });
  * // ... use timerBloc

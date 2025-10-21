@@ -1,14 +1,14 @@
 {
-  "name": "@bloc/concurrency",
+  "name": "@bloqz/concurrency",
   "version": "1.0.0",
   "description": "Concurrency package for the functional Bloc state management library.",
   "keywords": [
     "bloc",
+    "bloqz",
     "state management",
     "functional",
     "rxjs",
-    "typescript",
-    "react"
+    "typescript"
   ],
   "homepage": "https://github.com/shovelmn12/bloc#readme",
   "bugs": {
@@ -38,7 +38,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@bloc/core": "../core",
+    "@bloqz/core": "^1.0.0",
     "@types/node": "^22.13.14",
     "typescript": "^5.8.2"
   }

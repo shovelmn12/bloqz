@@ -1,4 +1,4 @@
-import { EventTransformer } from "@bloc/core";
+import { EventTransformer } from "@bloqz/core";
 import { concatMap } from "rxjs";
 
 /**

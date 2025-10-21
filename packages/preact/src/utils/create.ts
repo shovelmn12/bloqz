@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from "./preact.js";
-import { createBloc, Bloc, CreateBlocProps } from "@bloc/core";
+import { createBloc, Bloc, CreateBlocProps } from "@bloqz/core";
 
 /**
  * A React Hook that creates and memoizes a Bloc instance, automatically
@@ -36,7 +36,7 @@ import { createBloc, Bloc, CreateBlocProps } from "@bloc/core";
  * @example
  * // CounterProvider.tsx
  * import React from 'react';
- * import { useCreateBloc } from '@bloc/react';
+ * import { useCreateBloc } from '@bloqz/react';
  * import { CounterContext } from './counter.context';
  * import { initialState, handlers, CounterEvent, CounterState } from './types';
  *

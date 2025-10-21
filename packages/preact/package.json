@@ -1,14 +1,15 @@
 {
-  "name": "@bloc/preact",
+  "name": "@bloqz/preact",
   "version": "1.0.0",
   "description": "Preact package for the functional Bloc state management library.",
   "keywords": [
     "bloc",
+    "bloqz",
     "state management",
     "functional",
     "rxjs",
     "typescript",
-    "react"
+    "preact"
   ],
   "homepage": "https://github.com/shovelmn12/bloc#readme",
   "bugs": {
@@ -35,7 +36,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@bloc/core": "../core",
+    "@bloqz/core": "../core",
     "preact": "^10.26.9",
     "rxjs": "^7.8.2"
   },
