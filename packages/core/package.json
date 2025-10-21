@@ -1,25 +1,26 @@
 {
   "name": "@bloqz/core",
-  "version": "1.0.0",
-  "description": "Core package for the functional Bloc state management library.",
+  "version": "1.0.1",
+  "description": "Core package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
     "bloqz",
     "state management",
     "functional",
     "rxjs",
-    "typescript"
+    "typescript",
+    "core"
   ],
-  "homepage": "https://github.com/shovelmn12/bloc#readme",
+  "homepage": "https://github.com/shovelmn12/bloqz#readme",
   "bugs": {
-    "url": "https://github.com/shovelmn12/bloc/issues"
+    "url": "https://github.com/shovelmn12/bloqz/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shovelmn12/bloc.git"
+    "url": "git+https://github.com/shovelmn12/bloqz.git"
   },
   "license": "MIT",
-  "author": "Shovel Maman (shovelmn12@gmail.com)",
+  "author": "Shovel Maman",
   "type": "module",
   "exports": {
     "main": "./dist/index.js",

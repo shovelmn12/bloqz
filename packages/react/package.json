@@ -1,7 +1,7 @@
 {
   "name": "@bloqz/react",
-  "version": "1.0.0",
-  "description": "React package for the functional Bloc state management library.",
+  "version": "1.0.1",
+  "description": "React package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
     "bloqz",
@@ -11,16 +11,16 @@
     "typescript",
     "react"
   ],
-  "homepage": "https://github.com/shovelmn12/bloc#readme",
+  "homepage": "https://github.com/shovelmn12/bloqz#readme",
   "bugs": {
-    "url": "https://github.com/shovelmn12/bloc/issues"
+    "url": "https://github.com/shovelmn12/bloqz/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shovelmn12/bloc.git"
+    "url": "git+https://github.com/shovelmn12/bloqz.git"
   },
   "license": "MIT",
-  "author": "Shovel Maman (shovelmn12@gmail.com)",
+  "author": "Shovel Maman",
   "type": "module",
   "exports": {
     "main": "./dist/index.js",
@@ -36,7 +36,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@bloqz/core": "^1.0.0",
+    "@bloqz/core": "^1.0.1",
     "lodash": "^4.17.21",
     "rxjs": "^7.8.2"
   },

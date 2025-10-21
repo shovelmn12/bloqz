@@ -1,25 +1,26 @@
 {
   "name": "@bloqz/concurrency",
-  "version": "1.0.0",
-  "description": "Concurrency package for the functional Bloc state management library.",
+  "version": "1.0.1",
+  "description": "Concurrency package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
     "bloqz",
     "state management",
     "functional",
     "rxjs",
-    "typescript"
+    "typescript",
+    "concurrency"
   ],
-  "homepage": "https://github.com/shovelmn12/bloc#readme",
+  "homepage": "https://github.com/shovelmn12/bloqz#readme",
   "bugs": {
-    "url": "https://github.com/shovelmn12/bloc/issues"
+    "url": "https://github.com/shovelmn12/bloqz/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shovelmn12/bloc.git"
+    "url": "git+https://github.com/shovelmn12/bloqz.git"
   },
   "license": "MIT",
-  "author": "Shovel Maman (shovelmn12@gmail.com)",
+  "author": "Shovel Maman",
   "type": "module",
   "exports": {
     "main": "./dist/index.js",
@@ -38,7 +39,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@bloqz/core": "^1.0.0",
+    "@bloqz/core": "^1.0.1",
     "@types/node": "^22.13.14",
     "typescript": "^5.8.2"
   }
