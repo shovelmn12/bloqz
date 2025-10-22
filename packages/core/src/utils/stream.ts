@@ -7,5 +7,6 @@ export {
   from,
   ObservableInput,
   OperatorFunction,
+  firstValueFrom,
 } from "rxjs";
 export * from "rxjs/operators";
