@@ -20,6 +20,18 @@ export interface RelayProviderProps {
  * @param props.children The children to render.
  * @param props.create An optional function to create the Relay instance.
  * @returns The Relay provider.
+ * @example
+ * ```tsx
+ * import { RelayProvider } from "@bloqz/react-relay";
+ *
+ * function App() {
+ *   return (
+ *     <RelayProvider>
+ *       <MyComponent />
+ *     </RelayProvider>
+ *   );
+ * }
+ * ```
  */
 export function RelayProvider({
   children,
