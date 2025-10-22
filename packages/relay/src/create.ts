@@ -1,60 +1,80 @@
-import { Subject } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { Subject } from "rxjs";
+import { filter } from "rxjs/operators";
 
-import {
-  type Relay,
-  type EventsMap,
-  type TopicEvent,
-  type Handler,
-  type WildcardHandler,
-} from './types';
+import { Relay, RelayEvent, RelayHandler, RelayPredicate } from "./index.js";
 
 /**
- * Creates a new Relay (event bus) instance.
- *
- * @template Events The map of possible event types.
- * @returns {Relay<Events>} A new Relay instance.
+ * Factory function to create a new Relay instance using RxJS.
+ * @returns A new Relay instance.
  */
-export function createRelay<Events extends EventsMap>(): Relay<Events> {
-  const subject = new Subject<TopicEvent<Events>>();
+export function createRelay(): Relay {
+  // The single, central stream for all events.
+  const eventStream$ = new Subject<{ topic: string; event: RelayEvent }>();
+
+  /**
+   * Parses a pattern and checks if it matches a given topic and event.
+   * (This helper function remains the same)
+   */
+  const matchesPattern = (
+    pattern: string,
+    topic: string,
+    event: RelayEvent
+  ): boolean => {
+    if (pattern === "*") return true;
+    const subPatterns = pattern.split("|");
+    return subPatterns.some((subPattern) => {
+      const [topicPattern, typePattern] = subPattern.split(".");
+      if (topicPattern !== "*" && topicPattern !== topic) return false;
+      if (!typePattern) return true;
+      if (typePattern.startsWith("{") && typePattern.endsWith("}")) {
+        const types = typePattern.slice(1, -1).split("|");
+        return types.includes(event.type);
+      }
+      return typePattern === event.type;
+    });
+  };
 
   return {
-    emit<T extends keyof Events>(topic: T, event: Events[T]): void {
-      subject.next({
+    emit(topic: string, event: RelayEvent): void {
+      // Simply push the new event into the stream.
+      eventStream$.next({ topic, event });
+    },
+    on(
+      patternOrPredicate: string | RelayPredicate,
+      callback: RelayHandler
+    ): () => void {
+      // Create the filter predicate once, before subscribing.
+      const filterFn = ({
         topic,
         event,
-      });
-    },
-    on<T extends keyof Events>(
-      topic: T | '*',
-      callback: Handler<Events[T]> | WildcardHandler<Events>
-    ): () => void {
-      let subscription;
+      }: {
+        topic: string;
+        event: RelayEvent;
+      }): boolean => {
+        if (typeof patternOrPredicate === "string") {
+          return matchesPattern(patternOrPredicate, topic, event);
+        }
+        // For predicates, just execute them.
+        return patternOrPredicate(topic, event);
+      };
 
-      if (topic === '*') {
-        subscription = subject.subscribe((topicEvent: TopicEvent<Events>) => {
-          (callback as WildcardHandler<Events>)(
-            topicEvent.topic,
-            topicEvent.event
-          );
+      // Create a new subscription to the main stream.
+      const subscription = eventStream$
+        .pipe(
+          // Use the pre-built filter function. This is more efficient.
+          filter(filterFn)
+        )
+        .subscribe(({ topic, event }) => {
+          // When an event passes the filter, call the user's handler.
+          callback(topic, event);
         });
-      } else {
-        subscription = subject
-          .pipe(
-            filter(
-              (topicEvent: TopicEvent<Events>) => topicEvent.topic === topic
-            ),
-            map(
-              (topicEvent: TopicEvent<Events>) => topicEvent.event as Events[T]
-            )
-          )
-          .subscribe(callback as Handler<Events[T]>);
-      }
 
+      // Return a function that tears down this specific subscription.
       return () => subscription.unsubscribe();
     },
     dispose(): void {
-      subject.complete();
+      // Complete the subject, which automatically unsubscribes all listeners.
+      eventStream$.complete();
     },
   };
 }
