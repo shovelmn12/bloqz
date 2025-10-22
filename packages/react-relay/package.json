@@ -1,0 +1,55 @@
+{
+  "name": "@bloqz/react-relay",
+  "version": "1.0.0",
+  "description": "React bindings for the @bloqz/relay package.",
+  "keywords": [
+    "bloc",
+    "bloqz",
+    "state management",
+    "functional",
+    "rxjs",
+    "typescript",
+    "react",
+    "relay",
+    "event bus"
+  ],
+  "homepage": "https://github.com/shovelmn12/bloqz#readme",
+  "bugs": {
+    "url": "https://github.com/shovelmn12/bloqz/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shovelmn12/bloqz.git"
+  },
+  "license": "MIT",
+  "author": "Shovel Maman",
+  "type": "module",
+  "exports": {
+    "main": "./dist/index.js",
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepublishOnly": "npm run build",
+    "publish": "npm publish",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "@bloqz/relay": "^1.0.0",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^14.0.0",
+    "@types/react": "^18.2.0",
+    "jsdom": "^24.1.1",
+    "react": "^18.2.0",
+    "typescript": "^5.8.2",
+    "vitest": "^2.0.5"
+  }
+}
