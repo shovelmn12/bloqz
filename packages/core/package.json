@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Core package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -37,7 +37,8 @@
     "clean": "rm -rf dist",
     "build": "npm run clean && tsc",
     "prepublishOnly": "npm run build",
-    "publish": "npm publish"
+    "publish": "npm publish",
+    "test": "vitest"
   },
   "dependencies": {
     "fp-ts": "^2.16.9",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "vitest": "^3.2.4"
   }
 }
