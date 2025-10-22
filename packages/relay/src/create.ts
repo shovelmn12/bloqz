@@ -21,11 +21,31 @@ export function createRelay(): Relay {
     event: RelayEvent
   ): boolean => {
     if (pattern === "*") return true;
-    const subPatterns = pattern.split("|");
+
+    // Helper to split by '|' but ignore it inside '{}'
+    const splitSubPatterns = (p: string): string[] => {
+      const patterns: string[] = [];
+      let lastSplit = 0;
+      let braceDepth = 0;
+      for (let i = 0; i < p.length; i++) {
+        if (p[i] === "{") braceDepth++;
+        else if (p[i] === "}") braceDepth--;
+        else if (p[i] === "|" && braceDepth === 0) {
+          patterns.push(p.substring(lastSplit, i));
+          lastSplit = i + 1;
+        }
+      }
+      patterns.push(p.substring(lastSplit));
+      return patterns;
+    };
+
+    const subPatterns = splitSubPatterns(pattern);
+
     return subPatterns.some((subPattern) => {
       const [topicPattern, typePattern] = subPattern.split(".");
       if (topicPattern !== "*" && topicPattern !== topic) return false;
       if (!typePattern) return true;
+      if (typePattern === "*") return true;
       if (typePattern.startsWith("{") && typePattern.endsWith("}")) {
         const types = typePattern.slice(1, -1).split("|");
         return types.includes(event.type);
