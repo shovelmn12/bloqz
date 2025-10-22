@@ -1,0 +1,54 @@
+{
+  "name": "@bloqz/relay",
+  "version": "1.0.0",
+  "description": "A package for enabling inter-bloc communication using an event relay system.",
+  "keywords": [
+    "bloc",
+    "bloqz",
+    "state management",
+    "functional",
+    "rxjs",
+    "typescript",
+    "relay",
+    "event bus",
+    "events"
+  ],
+  "homepage": "https://github.com/shovelmn12/bloqz#readme",
+  "bugs": {
+    "url": "https://github.com/shovelmn12/bloqz/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shovelmn12/bloqz.git"
+  },
+  "license": "MIT",
+  "author": "Shovel Maman",
+  "type": "module",
+  "exports": {
+    "main": "./dist/index.js",
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepublishOnly": "npm run build",
+    "publish": "npm publish",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "@bloqz/core": "^1.0.1",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "typescript": "^5.8.2",
+    "vitest": "^2.0.5"
+  }
+}
