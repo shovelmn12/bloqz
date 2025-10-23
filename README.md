@@ -29,6 +29,8 @@ This project provides a core engine (`@bloqz/core`), React integration hooks (`@
 *   **Automatic Cleanup (`@bloqz/react`):** `useCreateBloc` handles `bloc.close()` automatically.
 *   **Concurrent Mode Ready (`@bloqz/react`):** Uses `useSyncExternalStore` for efficient state subscriptions.
 *   **Optimized Re-renders (`@bloqz/react`):** `useBlocSelectState` minimizes component updates.
+*   **Event Bus (`@bloqz/relay`):** A lightweight, RxJS-powered event bus.
+*   **React Relay (`@bloqz/react-relay`):** React bindings for `@bloqz/relay`.
 
 ## Packages
 
@@ -37,6 +39,8 @@ This project is organized into the following packages:
 *   **`@bloqz/core`**: The core engine. Contains `createBloc`, fundamental type definitions (`Bloc`, `EventHandler`, `BlocContext`, etc.), and the RxJS-based event processing pipeline. It's framework-agnostic.
 *   **`@bloqz/react`**: Provides React Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) and utilities for integrating Blocs seamlessly into React applications using Context.
 *   **`@bloqz/concurrency`**: Exports standard `EventTransformer` functions (`sequential`, `concurrent`, `restartable`, `droppable`) for use with `@bloqz/core`.
+*   **`@bloqz/relay`**: A lightweight, RxJS-powered event bus for communication between different parts of an application.
+*   **`@bloqz/react-relay`**: React bindings for `@bloqz/relay`, providing a `RelayProvider` and `useRelay` hook.
 
 ## Installation
 
