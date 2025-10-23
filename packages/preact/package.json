@@ -37,12 +37,8 @@
     "publish": "npm publish"
   },
   "dependencies": {
-    "@bloqz/core": "^1.0.1",
+    "@bloqz/core": "workspace:*",
     "preact": "^10.26.9",
     "rxjs": "^7.8.2"
-  },
-  "devDependencies": {
-    "@types/node": "^22.13.14",
-    "typescript": "^5.8.2"
   }
 }

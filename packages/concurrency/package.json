@@ -41,10 +41,6 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@bloqz/core": "1.0.0",
-    "@types/node": "^22.13.14",
-    "rxjs-marbles": "^7.0.1",
-    "typescript": "^5.8.2",
-    "vitest": "^3.2.4"
+    "@bloqz/core": "workspace:*"
   }
 }

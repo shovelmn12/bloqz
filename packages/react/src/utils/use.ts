@@ -1,4 +1,4 @@
-import { use, Context } from "./react.js";
+import { useContext, Context } from "./react.js";
 import { Bloc } from "@bloqz/core";
 
 /**
@@ -35,7 +35,7 @@ export function useBloc<Event, State>(
   context: Context<Bloc<Event, State>>
 ): Bloc<Event, State> {
   // Uses React's context mechanism to access the provided Bloc instance.
-  const bloc = use(context); // `use` is the modern way, similar to useContext
+  const bloc = useContext(context); // `use` is the modern way, similar to useContext
 
   // Ensure the Bloc context value exists. This guards against using the hook
   // outside of a necessary Provider component.

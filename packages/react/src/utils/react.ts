@@ -6,5 +6,5 @@ export {
   createContext,
   useRef,
   Context,
-  use,
+  useContext,
 } from "react";
