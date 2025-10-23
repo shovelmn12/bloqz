@@ -9,4 +9,11 @@ export {
   OperatorFunction,
   firstValueFrom,
 } from "rxjs";
-export * from "rxjs/operators";
+export {
+  map,
+  mergeMap,
+  groupBy,
+  tap,
+  catchError,
+  finalize,
+} from "rxjs/operators";
