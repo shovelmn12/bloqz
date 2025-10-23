@@ -7,8 +7,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@bloqz/core': new URL(
-        '../core/src/index.ts',
+      '@bloqz/relay': new URL(
+        '../relay/src/index.ts',
         import.meta.url
       ).pathname,
     },

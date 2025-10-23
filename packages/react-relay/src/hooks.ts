@@ -1,0 +1,22 @@
+import { useContext } from "react";
+import { Relay } from "@bloqz/relay";
+
+import { RelayContext } from "./context.js";
+
+/**
+ * A hook to get the Relay event bus instance.
+ * @returns The Relay instance.
+ * @example
+ * ```tsx
+ * import { useRelay } from "@bloqz/react-relay";
+ *
+ * function MyComponent() {
+ *   const relay = useRelay();
+ *
+ *   // ...
+ * }
+ * ```
+ */
+export function useRelay(): Relay {
+  return useContext(RelayContext);
+}
