@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/concurrency",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Concurrency package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
