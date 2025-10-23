@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { RelayProvider } from './provider';
-import { useRelay } from './hooks';
+import { RelayProvider } from '../src/provider';
+import { useRelay } from '../src/hooks';
 import { createRelay, Relay } from '@bloqz/relay';
 import React, { ReactNode } from 'react';
 

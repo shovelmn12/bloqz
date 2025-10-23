@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createBloc } from './utils/create';
+import { createBloc } from '../src/utils/create';
 import { firstValueFrom, skip } from 'rxjs';
 
 describe('createBloc', () => {

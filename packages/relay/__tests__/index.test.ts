@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createRelay } from './create';
+import { createRelay } from '../src/create';
 
 describe('createRelay', () => {
   it('should emit and receive events', () => {

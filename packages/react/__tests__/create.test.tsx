@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { useCreateBloc } from './utils/create';
+import { useCreateBloc } from '../src/utils/create';
 import { renderHook, act } from '@testing-library/react';
 
 describe('useCreateBloc', () => {

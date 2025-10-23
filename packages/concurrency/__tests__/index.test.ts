@@ -1,8 +1,8 @@
 import { describe, it } from "vitest";
-import { concurrent } from "./utils/concurrent";
-import { droppable } from "./utils/droppable";
-import { restartable } from "./utils/restartable";
-import { sequential } from "./utils/sequential";
+import { concurrent } from "../src/utils/concurrent";
+import { droppable } from "../src/utils/droppable";
+import { restartable } from "../src/utils/restartable";
+import { sequential } from "../src/utils/sequential";
 import { tap } from "rxjs";
 import { marbles } from "rxjs-marbles";
 
