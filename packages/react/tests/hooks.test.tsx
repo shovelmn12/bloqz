@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import React, { FC, PropsWithChildren, createContext } from "react";
+import { FC, PropsWithChildren, createContext } from "react";
 import { createBloc, Bloc, CreateBlocProps } from "@bloqz/core";
+
 import {
   useCreateBloc,
   useBloc,
@@ -37,10 +38,11 @@ const BlocContext = createContext<Bloc<CounterEvent, CounterState> | null>(
   null
 );
 
-const wrapper: FC<PropsWithChildren<{ bloc: Bloc<CounterEvent, CounterState> }>> =
-  ({ children, bloc }) => (
-    <BlocContext.Provider value={bloc}>{children}</BlocContext.Provider>
-  );
+const wrapper: FC<
+  PropsWithChildren<{ bloc: Bloc<CounterEvent, CounterState> }>
+> = ({ children, bloc }) => (
+  <BlocContext.Provider value={bloc}>{children}</BlocContext.Provider>
+);
 
 // --- Tests ---
 

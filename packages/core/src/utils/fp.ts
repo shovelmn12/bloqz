@@ -1,1 +1,1 @@
-export * from "fp-ts/Option";
+export { none, type Option } from "fp-ts/Option";

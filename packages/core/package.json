@@ -30,12 +30,16 @@
   "files": [
     "dist"
   ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc",
+    "prebuild": "npm run clean",
+    "build:js": "rolldown -c 'rolldown.config.ts' -m --minify-internal-exports",
+    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist",
+    "build": "pnpm prebuild && pnpm build:js && pnpm build:types",
     "prepublishOnly": "npm run build",
     "publish": "npm publish",
     "test": "vitest --run"
@@ -43,5 +47,8 @@
   "dependencies": {
     "fp-ts": "^2.16.9",
     "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "rolldown": "^1.0.0-beta.44"
   }
 }
