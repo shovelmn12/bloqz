@@ -38,31 +38,22 @@ You can then use the `useRelay` hook in any component to get access to the `Rela
 // src/components/MyComponent.tsx
 import { useEffect } from 'react';
 import { useRelay } from '@bloqz/react-relay';
-import { Event } from '@bloqz/relay';
-
-class UserLoggedInEvent extends Event {
-  constructor(public readonly userId: string) {
-    super();
-  }
-}
 
 function MyComponent() {
   const relay = useRelay();
 
   useEffect(() => {
-    const subscription = relay
-      .on(UserLoggedInEvent)
-      .subscribe((event) => {
-        console.log(`User logged in: ${event.userId}`);
-      });
+    const unsubscribe = relay.on('user', (topic, event) => {
+      console.log(`User logged in:`, event);
+    });
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [relay]);
 
   const handleLogin = () => {
-    relay.publish(new UserLoggedInEvent('user-123'));
+    relay.emit('user', { type: 'login', userId: 'user-123' });
   };
 
   return (
