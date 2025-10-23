@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/react",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "React package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -38,19 +38,11 @@
     "test": "vitest --run"
   },
   "dependencies": {
-    "@bloqz/core": "1.0.0",
     "lodash": "^4.17.21",
     "rxjs": "^7.8.2"
   },
-  "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
-    "@types/lodash": "^4.17.20",
-    "@types/node": "^24.1.0",
-    "@types/react": "^19.1.8",
-    "jsdom": "^27.0.1",
-    "react": "^19.1.0",
-    "typescript": "^5.8.2",
-    "vitest": "^3.2.4"
-  }
+  "peerDependencies": {
+    "@bloqz/core": "workspace:*"
+  },
+  "devDependencies": {}
 }

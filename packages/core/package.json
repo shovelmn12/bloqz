@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/core",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Core package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -43,10 +43,5 @@
   "dependencies": {
     "fp-ts": "^2.16.9",
     "rxjs": "^7.8.2"
-  },
-  "devDependencies": {
-    "@types/node": "^22.13.14",
-    "typescript": "^5.8.2",
-    "vitest": "^3.2.4"
   }
 }
