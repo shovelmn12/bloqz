@@ -22,13 +22,20 @@
   "license": "MIT",
   "author": "Shovel Maman",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "exports": {
-    "main": "./dist/index.js",
-    "import": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "files": [
-    "dist"
+    "dist/*.js",
+    "dist/*.cjs",
+    "dist/*.d.ts",
+    "README.md"
   ],
   "sideEffects": false,
   "publishConfig": {
@@ -37,8 +44,8 @@
   "scripts": {
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
-    "build:js": "rolldown -c 'rolldown.config.ts' -m --minify-internal-exports",
-    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist",
+    "build:js": "NODE_ENV=production rolldown -c rolldown.config.ts && find dist -name '*.map' -delete",
+    "build:types": "dts-bundle-generator -o dist/index.d.ts src/index.ts",
     "build": "pnpm prebuild && pnpm build:js && pnpm build:types",
     "prepublishOnly": "npm run build",
     "publish": "npm publish",
@@ -49,6 +56,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "dts-bundle-generator": "^9.5.1",
     "rolldown": "^1.0.0-beta.44"
   }
 }

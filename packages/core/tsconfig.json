@@ -32,8 +32,7 @@
 
     // --- Other Settings (Kept from yours) ---
     "removeComments": false,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "forceConsistentCasingInFileNames": true
 
     // REMOVED: Rolldown will generate its own sourcemaps
     // "sourceMap": true,
