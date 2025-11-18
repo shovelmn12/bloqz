@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/react-relay",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "React bindings for the @bloqz/relay package.",
   "keywords": [
     "bloc",
@@ -32,9 +32,13 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "publish": "npm publish",
     "test": "vitest --run"

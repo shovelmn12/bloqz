@@ -1,25 +1,14 @@
 {
   "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
-    "alwaysStrict": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "outDir": "dist",
     "declaration": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "removeComments": false,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "target": "esnext",
-    "lib": ["ES2022", "DOM"],
-    "skipLibCheck": true
+    "emitDeclarationOnly": false,
+    "rootDir": "src",
+    "stripInternal": true,
+    "strict": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]

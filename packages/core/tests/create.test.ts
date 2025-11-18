@@ -1,14 +1,15 @@
 import { describe, it, expect, vi } from "vitest";
-import { createBloc, createPipeBloc } from "../src/utils/create.js";
 import {
+  toArray,
   firstValueFrom,
   skip,
   take,
   BehaviorSubject,
   Subject,
-} from "../src/utils/stream.js";
+} from "rxjs";
+
+import { createBloc, createPipeBloc } from "../src/utils/create.js";
 import { Bloc } from "../src/models/index.js";
-import { toArray } from "rxjs";
 
 // --- Test Types ---
 

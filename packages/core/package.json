@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/core",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Core package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -22,20 +22,25 @@
   "license": "MIT",
   "author": "Shovel Maman",
   "type": "module",
+  "module": "./dist/index.js",
   "exports": {
-    "main": "./dist/index.js",
-    "import": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "publish": "npm publish",
     "test": "vitest --run"
@@ -43,5 +48,6 @@
   "dependencies": {
     "fp-ts": "^2.16.9",
     "rxjs": "^7.8.2"
-  }
+  },
+  "devDependencies": {}
 }
