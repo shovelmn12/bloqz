@@ -1,6 +1,6 @@
+import React, { FC, PropsWithChildren, createContext } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { FC, PropsWithChildren, createContext } from "react";
 import { createBloc, Bloc, CreateBlocProps } from "@bloqz/core";
 
 import {

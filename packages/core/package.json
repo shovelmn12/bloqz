@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/core",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Core package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -30,9 +30,7 @@
     }
   },
   "files": [
-    "dist/*.js",
-    "dist/*.cjs",
-    "dist/*.d.ts",
+    "dist",
     "README.md"
   ],
   "sideEffects": false,
@@ -42,9 +40,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
-    "build:js": "NODE_ENV=production rolldown -c rolldown.config.ts && find dist -name '*.map' -delete",
-    "build:types": "dts-bundle-generator -o dist/index.d.ts src/index.ts",
-    "build": "pnpm prebuild && pnpm build:js && pnpm build:types",
+    "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "publish": "npm publish",
     "test": "vitest --run"
@@ -53,8 +49,5 @@
     "fp-ts": "^2.16.9",
     "rxjs": "^7.8.2"
   },
-  "devDependencies": {
-    "dts-bundle-generator": "^9.5.1",
-    "rolldown": "^1.0.0-beta.50"
-  }
+  "devDependencies": {}
 }

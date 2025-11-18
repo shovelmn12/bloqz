@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/concurrency",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Concurrency package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -32,7 +32,8 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && tsc",
+    "prebuild": "npm run clean",
+    "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "publish": "npm publish",
     "test": "vitest --run"
@@ -42,5 +43,6 @@
   },
   "peerDependencies": {
     "@bloqz/core": "workspace:*"
-  }
+  },
+  "devDependencies": {}
 }

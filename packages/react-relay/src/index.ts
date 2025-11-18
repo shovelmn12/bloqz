@@ -1,3 +1,4 @@
-export * from "./context.js";
-export * from "./provider.js";
-export * from "./hooks.js";
+export { RelayContext } from "./context.js";
+export { RelayProvider } from "./provider.js";
+export type { RelayProviderProps } from "./provider.js";
+export { useRelay } from "./hooks.js";
