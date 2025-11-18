@@ -21,16 +21,6 @@ export default defineConfig({
       legalComments: "none",
       cleanDir: true,
     },
-    {
-      file: "dist/index.cjs",
-      format: "cjs",
-      exports: "named",
-      sourcemap: false,
-      keepNames: false,
-      minify: true,
-      minifyInternalExports: true,
-      legalComments: "none",
-    },
   ],
   external: external,
   treeshake: {

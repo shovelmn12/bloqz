@@ -1,41 +1,14 @@
 {
   "compilerOptions": {
-    // --- Your Strictness Settings (All Great!) ---
-    "strict": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "useUnknownInCatchVariables": true,
-    "alwaysStrict": true,
-
-    // --- Module Settings (Perfect for Node.js) ---
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "esModuleInterop": true,
-
-    // --- Target & Lib (Optimized for Node.js) ---
-    "target": "esnext",
-    // REMOVED "DOM" - This is critical for a Node.js package
-    // to avoid pulling in browser-specific types like 'window'.
-    "lib": ["ES2022"],
-
-    // --- Type Generation (The Key Changes) ---
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "outDir": "dist",
     "declaration": true,
-    // ADDED: This tells tsc to ONLY create .d.ts files.
-    // Rolldown will create the .js files.
-    "emitDeclarationOnly": true,
-    // This is where tsc will put the .d.ts files.
-    "outDir": "./dist",
-
-    // --- Other Settings (Kept from yours) ---
-    "removeComments": false,
-    "forceConsistentCasingInFileNames": true
-
-    // REMOVED: Rolldown will generate its own sourcemaps
-    // "sourceMap": true,
+    "emitDeclarationOnly": false,
+    "rootDir": "src",
+    "stripInternal": true,
+    "strict": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
