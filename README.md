@@ -25,10 +25,10 @@ This project provides a core engine (`@bloqz/core`), React integration hooks (`@
 *   **Type Safety (`@bloqz/core`):** Strong typing for Events, States, Handlers, and context.
 *   **Upfront Handler Definition (`@bloqz/core`):** Event handlers are defined declaratively on Bloc creation.
 *   **Configurable Concurrency (`@bloqz/core`, `@bloqz/concurrency`):** Specify event processing strategies (sequential, concurrent, restartable, droppable) per handler.
-*   **React Integration (`@bloqz/react`):** Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) for easy integration with React components.
+*   **React Integration (`@bloqz/react`):** Unified `useBloc` hook with strategies (`select`, `get`, `observe`) for flexible state consumption.
 *   **Automatic Cleanup (`@bloqz/react`):** `useCreateBloc` handles `bloc.close()` automatically.
 *   **Concurrent Mode Ready (`@bloqz/react`):** Uses `useSyncExternalStore` for efficient state subscriptions.
-*   **Optimized Re-renders (`@bloqz/react`):** `useBlocSelectState` minimizes component updates.
+*   **Optimized Re-renders (`@bloqz/react`):** Selectors minimize component updates.
 *   **Event Bus (`@bloqz/relay`):** A lightweight, RxJS-powered event bus.
 *   **React Relay (`@bloqz/react-relay`):** React bindings for `@bloqz/relay`.
 
@@ -37,7 +37,7 @@ This project provides a core engine (`@bloqz/core`), React integration hooks (`@
 This project is organized into the following packages:
 
 *   **`@bloqz/core`**: The core engine. Contains `createBloc`, fundamental type definitions (`Bloc`, `EventHandler`, `BlocContext`, etc.), and the RxJS-based event processing pipeline. It's framework-agnostic.
-*   **`@bloqz/react`**: Provides React Hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) and utilities for integrating Blocs seamlessly into React applications using Context.
+*   **`@bloqz/react`**: Provides React Hooks (`useCreateBloc`, `useBloc`) and utilities for integrating Blocs seamlessly into React applications using Context.
 *   **`@bloqz/concurrency`**: Exports standard `EventTransformer` functions (`sequential`, `concurrent`, `restartable`, `droppable`) for use with `@bloqz/core`.
 *   **`@bloqz/relay`**: A lightweight, RxJS-powered event bus for communication between different parts of an application.
 *   **`@bloqz/react-relay`**: React bindings for `@bloqz/relay`, providing a `RelayProvider` and `useRelay` hook.
@@ -79,9 +79,7 @@ yarn add @bloqz/core
 *   **`React.createContext`:** Use React's standard function to create a typed context (`Context<Bloc | null>`).
 *   **`useCreateBloc`:** Hook to create a stable, auto-closing Bloc instance within a component (ideal for providers).
 *   **`Context.Provider`:** Standard React provider to pass the stable Bloc instance down the tree.
-*   **`useBloc`:** Hook to access the Bloc instance from context.
-*   **`useBlocState`:** Hook to subscribe to the entire state and re-render on changes.
-*   **`useBlocSelectState`:** Hook to subscribe to a slice/derived value of the state, optimizing re-renders.
+*   **`useBloc`:** Universal hook to access the Bloc instance, state, or streams from context using strategies (`select`, `get`, `observe`).
 
 ## Concurrency (`@bloqz/concurrency`)
 
@@ -129,25 +127,27 @@ function CounterProvider({ children }) {
 
 // --- 4. Use in Components (CounterDisplay.tsx) ---
 import React from 'react';
-import { useBlocState } from '@bloqz/react';
+import { useBloc, select } from '@bloqz/react';
 import { CounterContext } from './counter.context';
 
 function CounterDisplay() {
-  const state = useBlocState(CounterContext);
-  return <p>Count: {state.count}</p>;
+  // Select a slice of state. Re-renders only when 'count' changes.
+  const count = useBloc(CounterContext, select(state => state.count));
+  return <p>Count: {count}</p>;
 }
 
 // --- 5. Use in Components (CounterButtons.tsx) ---
 import React from 'react';
-import { useBloc } from '@bloqz/react';
+import { useBloc, get } from '@bloqz/react';
 import { CounterContext } from './counter.context';
 
 function CounterButtons() {
-  const bloc = useBloc(CounterContext);
+  // Get the 'add' method statically. No re-renders on state change.
+  const add = useBloc(CounterContext, get(b => b.add));
   return (
     <>
-      <button onClick={() => bloc.add({ type: 'INCREMENT', amount: 1 })}>+</button>
-      <button onClick={() => bloc.add({ type: 'DECREMENT' })}>-</button>
+      <button onClick={() => add({ type: 'INCREMENT', amount: 1 })}>+</button>
+      <button onClick={() => add({ type: 'DECREMENT' })}>-</button>
     </>
   );
 }
@@ -208,23 +208,12 @@ function App() {
 *   Automatically calls `bloc.close()` on unmount.
 *   Ideal for use in Context Providers.
 
-#### `useBloc<Event, State>(context): Bloc<Event, State>`
+#### `useBloc<Event, State, T>(context, strategy?): T | Bloc`
 
-*   Accesses the Bloc instance from the specified React Context.
-*   Throws if used outside a Provider.
-
-#### `useBlocState<Event, State>(context): State`
-
-*   Subscribes to the Bloc's *entire* state using `useSyncExternalStore`.
-*   Returns the latest state and re-renders on any state change.
-
-#### `useBlocSelectState<Event, State, T>(context, selector): T`
-
-*   Subscribes to the Bloc's state, applies a `selector` function using `useSyncExternalStore`.
-*   Optimizes re-renders; only updates if the *selected* value changes.
-*   Requires a stable `selector` function (use `useCallback` or define outside).
-
-*(Other hooks like `useBlocPipeState` could be added here if implemented).*
+*   **Default (No strategy):** Returns the full `Bloc` instance.
+*   **`select(selector)`:** Subscribes to state and returns a specific slice. Re-renders only when selected value changes.
+*   **`get(selector)`:** Returns a static value or method from the Bloc without subscribing.
+*   **`observe(selector)`:** Transforms and returns the state observable without subscribing.
 
 ### `@bloqz/concurrency`
 
