@@ -8,18 +8,19 @@ React integration layer for the functional BLoC pattern library (`@bloqz/core`).
 
 ## Purpose
 
-This package bridges the gap between your BLoC business logic (managed using `@bloqz/core`) and your React UI components. It leverages React Context and custom hooks (`useCreateBloc`, `useBloc`, `useBlocState`, `useBlocSelectState`) for efficient, reactive, and concurrent-mode-safe state consumption and Bloc lifecycle management within React. It also includes a helper function (`createBlocContext`) for creating typed React Context objects for your Blocs.
+This package bridges the gap between your BLoC business logic (managed using `@bloqz/core`) and your React UI components. It leverages React Context and a versatile custom hook (`useBloc`) for efficient, reactive, and concurrent-mode-safe state consumption and Bloc lifecycle management within React.
 
 ## Features
 
 *   **`useCreateBloc`**: Hook to create and memoize a stable BLoC instance within a component's lifecycle, automatically handling cleanup (`bloc.close()`).
-*   **`useBloc`**: Hook to access the BLoC instance provided via context.
-*   **`useBlocState`**: Hook to subscribe to the *entire* state of a BLoC and re-render when it changes.
-*   **`useBlocSelectState`**: Hook to subscribe to a *selected slice* or derived value from the BLoC's state, optimizing re-renders.
-*   **`createBlocContext`**: Utility function to create a React Context specifically typed for a Bloc instance.
-*   **Type-Safe**: Leverages the strong typing of `@bloqz/core` and TypeScript for context and hooks.
-*   **Concurrent Mode Ready**: Uses `useSyncExternalStore` for state subscription hooks (`useBlocState`, `useBlocSelectState`).
-*   **Decoupled**: Encourages separation of UI components from business logic contained within Blocs.
+*   **`useBloc`**: The unified hook for all Bloc interactions.
+    *   **Access Bloc**: Get the full Bloc instance.
+    *   **Reactive State**: Select parts of the state with efficient re-renders using the `select` strategy.
+    *   **Static Access**: Get static values or methods without subscriptions using the `get` strategy.
+    *   **Stream Access**: Transform and consume the underlying state stream using the `observe` strategy.
+*   **Strategy Helpers**: `select`, `get`, `observe`, `add`, and `close` helpers to define how you want to consume the Bloc.
+*   **Type-Safe**: Leverages the strong typing of `@bloqz/core` and TypeScript.
+*   **Concurrent Mode Ready**: Uses `useSyncExternalStore` for reactive state selection.
 
 ## Installation
 
@@ -41,201 +42,137 @@ This package relies on the following peer dependencies, which you need to have i
 
 ## Core Concepts
 
-1.  **Context Creation**: Use either React's standard `createContext` function or the provided `createBlocContext` helper to create a context object typed for your specific Bloc instance (`Context<Bloc<Event, State> | null | undefined>`). Initializing the context value to `null` or `undefined` is recommended.
-2.  **Bloc Creation & Provision**: Inside a component (often a provider component), use the `useCreateBloc` hook from this package to create a stable, memoized BLoC instance, passing the configuration required by `@bloqz/core`'s `createBloc`. This hook also handles calling `bloc.close()` automatically on unmount. Pass this stable instance to the `<YourContext.Provider value={yourBlocInstance}>` component, wrapping the part of the tree that needs access.
-3.  **Consuming the Bloc/State**: Inside descendant components:
-    *   Use `useBloc(YourContext)` to get direct access to the BLoC instance (e.g., to call `bloc.add(event)`).
-    *   Use `useBlocState(YourContext)` to get the latest state value. The component will re-render whenever the state changes.
-    *   Use `useBlocSelectState(YourContext, selectorFn)` to get a specific part of the state. The component will *only* re-render if the *result* of the `selectorFn` changes.
+1.  **Context Creation**: Use standard React `createContext` to hold your Bloc instance.
+2.  **Bloc Creation & Provision**: Inside a provider component, use `useCreateBloc` to create a stable Bloc instance. Pass this instance to your Context Provider.
+3.  **Consuming the Bloc**: Use `useBloc` with optional strategies (`select`, `get`, `observe`) to consume data or behavior from the Bloc.
 
 ## API Documentation
 
-*(Note: `@/utils/react`, `@/utils/use`, `@/utils/stream` in source code examples are assumed to map to `react` and other internal files/dependencies. `@bloqz/core` refers to the peer dependency.)*
-
-### `createBlocContext<Event, State>(bloc: Bloc<Event, State> | undefined): Context<Bloc<Event, State> | undefined>`
-
-*   **Source:** `context.ts`
-*   **Description:** Creates a React Context object typed specifically for holding a Bloc instance (or `undefined`), initializing it with the provided `bloc` instance as its *default value*. Components consuming this context without a matching Provider above them in the tree will receive this default value.
-*   **Note:** While this provides type safety, using `React.createContext<Bloc<Event, State> | null>(null)` directly is often preferred standard practice, as relying on default context values can sometimes be less explicit.
-*   **Parameters:**
-    *   `bloc`: The optional Bloc instance to use as the *default value*. It's generally recommended to pass `undefined` or `null` here and provide the actual instance via `<Context.Provider value={...}>`.
-*   **Returns:** A `React.Context` object.
-
-```typescript
-// counter.context.ts
-import { createBlocContext } from '@bloqz/react'; // This package's helper
-import { CounterEvent, CounterState } from './types';
-
-// Create the context using the helper, initializing default value to undefined
-export const CounterContext = createBlocContext<CounterEvent, CounterState>(undefined);
-
-// Recommended alternative using standard React API:
-// import { createContext } from 'react';
-// import { Bloc } from '@bloqz/core';
-// export const CounterContext = createContext<Bloc<CounterEvent, CounterState> | null>(null);
-```
-
 ### `useCreateBloc<Event, State>(props: CreateBlocProps<Event, State>): Bloc<Event, State>`
 
-*   **Source:** `create.ts`
-*   **Description:** Hook that creates and memoizes a Bloc instance using `React.useMemo` with an empty dependency array (`[]`). It ensures the Bloc is created only once per component instance lifecycle and automatically registers `bloc.close()` to be called on unmount via `useEffect`. Provides a stable instance suitable for Context providers.
-*   **Parameters:**
-    *   `props`: The `CreateBlocProps` object (`initialState`, `handlers`, `onError`) needed by `@bloqz/core`'s `createBloc`. **Note:** Only the `props` from the initial render are used.
-*   **Returns:** A stable, memoized `Bloc<Event, State>` instance with automatic cleanup.
+Creates and memoizes a Bloc instance, automatically handling cleanup on unmount.
 
 ```typescript
-// CounterProvider.tsx
-import React from 'react';
-import { useCreateBloc } from '@bloqz/react';
-import { CounterContext } from './counter.context'; // Your context
-import { initialState, handlers, CounterEvent, CounterState } from './types'; // Your types/handlers
-
-function CounterProvider({ children }) {
-  // Create stable bloc instance using the hook; cleanup is handled internally
-  const counterBloc = useCreateBloc<CounterEvent, CounterState>({
-    initialState,
-    handlers,
-  });
-
-  // Provide the bloc via the standard React context provider
-  return (
-    <CounterContext.Provider value={counterBloc}>
-      {children}
-    </CounterContext.Provider>
-  );
-}
+const bloc = useCreateBloc({
+  initialState: { count: 0 },
+  handlers: { /* ... */ }
+});
 ```
 
-### `useBloc<Event, State>(context: Context<Bloc<Event, State> | null | undefined>): Bloc<Event, State>`
+### `useBloc<Event, State, T>(context: Context, strategy?: Strategy): T | Bloc`
 
-*   **Source:** `use.ts`
-*   **Description:** Hook to access the BLoC instance provided by the nearest `context.Provider`. Uses `React.use` internally. Accepts a context that might be initialized with `null` or `undefined`.
-*   **Throws:** An error if used outside a matching `context.Provider` that has provided a non-null/non-undefined Bloc instance.
-*   **Returns:** The `Bloc<Event, State>` instance from the context.
+The central hook for consuming a Bloc. Its return type and behavior depend on the provided strategy.
+
+#### 1. Accessing the Bloc (Default)
+
+Returns the full Bloc instance. Useful for dispatching events or passing the Bloc around.
 
 ```typescript
-// CounterButtons.tsx
-// ... imports ...
-import { CounterContext } from './counter.context'; // Your context
-
-function CounterButtons() {
-  const counterBloc = useBloc(CounterContext);
-  // ... implement buttons using counterBloc.add() ...
-}
+const bloc = useBloc(CounterContext);
+bloc.add({ type: 'INCREMENT' });
 ```
 
-### `useBlocState<Event, State>(context: Context<Bloc<Event, State> | null | undefined>): State`
+#### 2. Reactive State Selection (`select`)
 
-*   **Source:** `state.ts`
-*   **Description:** Hook that subscribes to the BLoC's state stream (`state$`) from the provided context using `useSyncExternalStore`. Returns the latest state value and triggers a re-render whenever the state changes. Assumes the context provides a valid Bloc instance.
-*   **Throws:** An error if used outside a matching `context.Provider` that has provided a non-null/non-undefined Bloc instance (via `useBloc` internally).
-*   **Returns:** The latest `State` value from the Bloc.
+Subscribes to the state and returns a selected slice. Re-renders **only** when the selected value changes.
 
 ```typescript
-// CounterDisplay.tsx
-// ... imports ...
-import { useBlocState } from '@bloqz/react';
-import { CounterContext } from './counter.context'; // Your context
+import { useBloc, select } from '@bloqz/react';
 
-function CounterDisplay() {
-  const state = useBlocState(CounterContext);
-  return <p>Count: {state.count}</p>;
-}
+// Re-renders only when `count` changes
+const count = useBloc(CounterContext, select(state => state.count));
 ```
 
-### `useBlocSelectState<Event, State, T>(context: Context<Bloc<Event, State> | null | undefined>, selector: (state: State) => T): T`
+#### 3. Static Access (`get`, `add`, `close`)
 
-*   **Source:** `select.ts`
-*   **Description:** Hook that subscribes to the BLoC's state stream, applies a `selector` function, and returns the selected value using `useSyncExternalStore`. Optimizes re-renders by using `distinctUntilChanged` internally and only triggering updates if the *result* of the `selector` function changes. Assumes the context provides a valid Bloc instance.
-*   **Parameters:**
-    *   `context`: The `BlocContext` object (potentially initialized with `null` or `undefined`).
-    *   `selector`: A function mapping the full `State` to the desired slice or derived value `T`. **Important:** Must be stable (memoized with `useCallback` or defined outside the component).
-*   **Throws:** An error if used outside a matching `context.Provider` that has provided a non-null/non-undefined Bloc instance (via `useBloc` internally).
-*   **Returns:** The latest selected value `T`.
+Retrieves a value or method from the Bloc instance **without** subscribing to state changes. The component will **not** re-render when state updates.
+
+**Convenience Helpers:**
+*   `add()`: Gets the `add` method.
+*   `close()`: Gets the `close` method.
 
 ```typescript
-// CounterStatus.tsx
-// ... imports ...
-import { useBlocSelectState } from '@bloqz/react';
-import { CounterContext, CounterState } from './counter.context'; // Your context and state type
+import { useBloc, get, add } from '@bloqz/react';
 
-function CounterStatus() {
-  const selectStatus = useCallback((state: CounterState) => state.status, []);
-  const status = useBlocSelectState(CounterContext, selectStatus);
-  return <p>Status: {status}</p>;
-}
+// Get the `add` method (stable reference)
+const dispatch = useBloc(CounterContext, add());
+
+// Equivalent to:
+// const dispatch = useBloc(CounterContext, get(b => b.add));
 ```
 
-## Full Usage Example (Putting it Together)
+#### 4. Stream Transformation (`observe`)
+
+Transforms the Bloc's `state$` stream and returns the resulting Observable. Does not trigger re-renders.
+
+```typescript
+import { useBloc, observe } from '@bloqz/react';
+import { map, debounceTime } from 'rxjs/operators';
+
+const debouncedCount$ = useBloc(CounterContext, observe(state$ =>
+  state$.pipe(
+    map(s => s.count),
+    debounceTime(500)
+  )
+));
+```
+
+## Full Usage Example
 
 ```typescript
 // --- types.ts ---
-import { EventHandlersObject, CreateBlocProps, Bloc } from '@bloqz/core';
-import { Context } from 'react';
-
-// Define State and Event types
-export interface CounterState { count: number; status: 'idle' | 'loading'; }
-export const initialState: CounterState = { count: 0, status: 'idle' };
-export type CounterEvent = { type: 'INCREMENT'; amount: number } | { type: 'DECREMENT'; amount: number };
-
-// Define Handlers object for createBloc
-export const handlers: EventHandlersObject<CounterEvent, CounterState> = {
-  INCREMENT: (event, { update }) => update(s => ({ ...s, count: s.count + event.amount })),
-  DECREMENT: (event, { update }) => update(s => ({ ...s, count: s.count - event.amount })),
-};
-
-// Define props for useCreateBloc
-export const counterBlocProps: CreateBlocProps<CounterEvent, CounterState> = {
-    initialState,
-    handlers,
-};
+export interface CounterState { count: number; }
+export type CounterEvent = { type: 'INCREMENT' };
 
 // --- counter.context.ts ---
-import { createContext } from 'react'; // Use standard React createContext
+import { createContext } from 'react';
 import { Bloc } from '@bloqz/core';
 import { CounterEvent, CounterState } from './types';
 
-// Create context using React.createContext, initialized to null
-export const CounterContext: Context<Bloc<CounterEvent, CounterState> | null> =
-    createContext<Bloc<CounterEvent, CounterState> | null>(null);
+export const CounterContext = createContext<Bloc<CounterEvent, CounterState> | null>(null);
 
 // --- CounterProvider.tsx ---
 import React from 'react';
-import { useCreateBloc } from '@bloqz/react'; // This package's hook
+import { useCreateBloc } from '@bloqz/react';
 import { CounterContext } from './counter.context';
-import { counterBlocProps, CounterEvent, CounterState } from './types'; // Import the props object
 
-function CounterProvider({ children }) {
-  // Create stable bloc instance using the hook; cleanup is handled internally
-  const counterBloc = useCreateBloc<CounterEvent, CounterState>(counterBlocProps);
+export function CounterProvider({ children }) {
+  const bloc = useCreateBloc({
+    initialState: { count: 0 },
+    handlers: {
+      INCREMENT: (_, { update }) => update(s => ({ ...s, count: s.count + 1 })),
+    },
+  });
 
   return (
-    // Provide the bloc via the standard React context provider
-    <CounterContext.Provider value={counterBloc}>
+    <CounterContext.Provider value={bloc}>
       {children}
     </CounterContext.Provider>
   );
 }
 
-// --- App.tsx ---
+// --- CounterDisplay.tsx ---
 import React from 'react';
-import CounterProvider from './CounterProvider';
-import CounterDisplay from './CounterDisplay'; // Uses useBlocState(CounterContext)
-import CounterButtons from './CounterButtons'; // Uses useBloc(CounterContext)
+import { useBloc, select } from '@bloqz/react';
+import { CounterContext } from './counter.context';
 
-function App() {
-  return (
-    <CounterProvider>
-      <h1>Counter App</h1>
-      <CounterDisplay />
-      <CounterButtons />
-    </CounterProvider>
-  );
+export function CounterDisplay() {
+  // Reactive: Updates when count changes
+  const count = useBloc(CounterContext, select(s => s.count));
+  return <p>Count: {count}</p>;
 }
 
-// --- CounterDisplay.tsx / CounterButtons.tsx / etc. ---
-// Implement components using useBloc, useBlocState, useBlocSelectState hooks
-// Make sure they import and use `CounterContext` directly. (See API examples above)
+// --- CounterButton.tsx ---
+import React from 'react';
+import { useBloc, add } from '@bloqz/react';
+import { CounterContext } from './counter.context';
+
+export function CounterButton() {
+  // Static: Gets add method, no re-renders on state change
+  const dispatch = useBloc(CounterContext, add());
+
+  return <button onClick={() => dispatch({ type: 'INCREMENT' })}>Increment</button>;
+}
 ```
 
 ## Contributing
