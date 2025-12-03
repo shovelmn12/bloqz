@@ -6,7 +6,10 @@
  * const loginEvent: RelayEvent = { type: 'login', userId: '123' };
  * const logoutEvent: RelayEvent = { type: 'logout' };
  */
-export type RelayEvent = { readonly type: string };
+export type RelayEvent = {
+  readonly type: string;
+  readonly [key: string]: any;
+};
 
 /**
  * A handler function that receives the topic and event for a matched subscription.
