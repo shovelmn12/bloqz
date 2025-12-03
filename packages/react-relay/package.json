@@ -44,8 +44,9 @@
     "test": "vitest --run"
   },
   "peerDependencies": {
-    "@bloqz/relay": "workspace:*",
-    "react": "^18.2.0"
+    "@bloqz/relay": "workspace:*"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "react": "^18.0.0 | ^19.0.0"
+  }
 }
