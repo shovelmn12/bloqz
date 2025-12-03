@@ -7,16 +7,14 @@ export { EMPTY as EMPTY_BLOC } from "./models/bloc.js";
 export type { BlocContext } from "./models/context.js";
 
 // Configuration Types
-export type {
-  CreateBlocProps,
-  CreatePipeBlocProps,
-} from "./models/create.js";
+export type { CreateBlocProps, CreatePipeBlocProps } from "./models/create.js";
 export type {
   EventHandler,
   EventHandlerFunction,
   EventHandlerObject,
   EventTransformer,
 } from "./models/functions.js";
+export type { EventHandlersObject } from "./models/handlers.js";
 
 // Async State Types
 export { State } from "./models/state.js";

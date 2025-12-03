@@ -43,7 +43,7 @@
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {
-    "@bloqz/core": "workspace:*"
+    "@bloqz/core": "workspace:^"
   },
   "devDependencies": {
     "react": "^18.0.0 || ^19.0.0"
