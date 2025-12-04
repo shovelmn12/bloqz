@@ -40,7 +40,6 @@
     "prebuild": "npm run clean",
     "build": "tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "publish": "npm publish",
     "test": "vitest --run"
   },
   "dependencies": {
