@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/relay",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "A package for enabling inter-bloc communication using an event relay system.",
   "keywords": [
     "bloc",
@@ -47,7 +47,7 @@
     "rxjs": "^7.8.2"
   },
   "peerDependencies": {
-    "@bloqz/core": "workspace:*"
+    "@bloqz/core": "workspace:^"
   },
   "devDependencies": {}
 }

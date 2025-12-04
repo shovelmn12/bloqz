@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/react-relay",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "React bindings for the @bloqz/relay package.",
   "keywords": [
     "bloc",
@@ -44,7 +44,7 @@
     "test": "vitest --run"
   },
   "peerDependencies": {
-    "@bloqz/relay": "workspace:*"
+    "@bloqz/relay": "workspace:^"
   },
   "devDependencies": {
     "react": "^18.0.0 || ^19.0.0"

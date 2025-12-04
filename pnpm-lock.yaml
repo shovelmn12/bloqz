@@ -45,7 +45,7 @@ importers:
   packages/concurrency:
     dependencies:
       '@bloqz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       rxjs:
         specifier: ^7.8.2
@@ -63,7 +63,7 @@ importers:
   packages/react:
     dependencies:
       '@bloqz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       lodash:
         specifier: ^4.17.21
@@ -79,7 +79,7 @@ importers:
   packages/react-relay:
     dependencies:
       '@bloqz/relay':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../relay
     devDependencies:
       react:
@@ -89,7 +89,7 @@ importers:
   packages/relay:
     dependencies:
       '@bloqz/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       rxjs:
         specifier: ^7.8.2
