@@ -1,5 +1,6 @@
 import { Bloc } from "@bloqz/core";
 import { Observable } from "./stream.js";
+import { useMemo } from "./react.js";
 
 // --- Strategy Types ---
 
@@ -28,16 +29,27 @@ export type CloseStrategy = {
 
 // --- Helper Factories ---
 
+const identity = (x: any) => x;
+
 /**
  * Creates a strategy for selecting a slice of state reactively.
  * The component will re-render whenever the selected value changes.
  *
  * @param selector A function that transforms the state into a specific value.
  */
+export function select<State>(
+  selector?: undefined
+): SelectStrategy<State, State>;
 export function select<State, T>(
   selector: (state: State) => T
+): SelectStrategy<State, T>;
+export function select<State, T>(
+  selector: (state: State) => T = identity
 ): SelectStrategy<State, T> {
-  return { type: "select", selector };
+  return useMemo(
+    () => ({ type: "select", selector }),
+    [selector]
+  );
 }
 
 /**
@@ -49,7 +61,10 @@ export function select<State, T>(
 export function get<Event, State, T>(
   selector: (bloc: Bloc<Event, State>) => T
 ): GetStrategy<Event, State, T> {
-  return { type: "get", selector };
+  return useMemo(
+    () => ({ type: "get", selector }),
+    [selector]
+  );
 }
 
 /**
@@ -61,7 +76,10 @@ export function get<Event, State, T>(
 export function observe<State, T>(
   selector: (state$: Observable<State>) => Observable<T>
 ): ObserveStrategy<State, T> {
-  return { type: "observe", selector };
+  return useMemo(
+    () => ({ type: "observe", selector }),
+    [selector]
+  );
 }
 
 /**
@@ -69,7 +87,10 @@ export function observe<State, T>(
  * This is a convenient shortcut for `get(b => b.add)`.
  */
 export function add(): AddStrategy {
-  return { type: "add" };
+  return useMemo(
+    () => ({ type: "add" }),
+    []
+  );
 }
 
 /**
@@ -77,5 +98,8 @@ export function add(): AddStrategy {
  * This is a convenient shortcut for `get(b => b.close)`.
  */
 export function close(): CloseStrategy {
-  return { type: "close" };
+  return useMemo(
+    () => ({ type: "close" }),
+    []
+  );
 }

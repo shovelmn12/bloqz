@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/react",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "React package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
