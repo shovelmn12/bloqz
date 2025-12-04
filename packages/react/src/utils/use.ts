@@ -124,7 +124,7 @@ export function useBloc<Event, State, T>(
 
       const subscription = bloc.state$
         .pipe(map(selector), distinctUntilChanged(isEqual))
-        .subscribe((val) => {
+        .subscribe((val: unknown) => {
           selectedValueRef.current = val;
           onStoreChange();
         });
