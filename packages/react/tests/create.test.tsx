@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { useCreateBloc } from '../src/utils/create';
-import { renderHook, act } from '@testing-library/react';
+import { describe, it, expect } from "vitest";
+import { useCreateBloc } from "../src/utils/create";
+import { renderHook } from "@testing-library/react";
 
-describe('useCreateBloc', () => {
-  it('should create a bloc and close it on unmount', () => {
+describe("useCreateBloc", () => {
+  it("should create a bloc and close it on unmount", () => {
     const { result, unmount } = renderHook(() =>
       useCreateBloc({
         initialState: { count: 0 },
