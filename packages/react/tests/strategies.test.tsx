@@ -1,8 +1,6 @@
-import React from "react";
 import { renderHook } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { select, get, observe, add, close } from "../src/utils/strategies";
-import { Bloc } from "@bloqz/core";
 
 // Mock React.useMemo since we are using it inside the strategies.
 // Wait, renderHook already provides a React environment, so useMemo should work if called inside the hook.
@@ -23,12 +21,9 @@ describe("Strategies Hooks", () => {
   });
 
   it("select returns new reference with new selector", () => {
-    const { result, rerender } = renderHook(
-      ({ sel }) => select(sel),
-      {
-        initialProps: { sel: (state: any) => state.a },
-      }
-    );
+    const { result, rerender } = renderHook(({ sel }) => select(sel), {
+      initialProps: { sel: (state: any) => state.a },
+    });
 
     const firstResult = result.current;
 
