@@ -8,4 +8,4 @@ export {
   ObservableInput,
   OperatorFunction,
 } from "rxjs";
-export * from "rxjs/operators";
+export { map, distinctUntilChanged } from "rxjs/operators";

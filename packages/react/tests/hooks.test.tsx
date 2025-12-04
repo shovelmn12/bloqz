@@ -113,12 +113,18 @@ describe("React Hooks", () => {
       const bloc = createCounterBloc({
         initialState: { count: 0, name: "initial" },
       });
-      // @ts-ignore
-      const selector = select((state: CounterState) => state.name);
 
-      const { result } = renderHook(() => useBloc(BlocContext as any, selector), {
-        wrapper: (props) => wrapper({ ...props, bloc }),
-      });
+      const { result } = renderHook(
+        () =>
+          useBloc(
+            BlocContext as any,
+            // @ts-ignore
+            select((state: CounterState) => state.name)
+          ),
+        {
+          wrapper: (props) => wrapper({ ...props, bloc }),
+        }
+      );
 
       expect(result.current).toBe("initial");
 

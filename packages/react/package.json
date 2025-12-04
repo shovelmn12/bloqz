@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/react",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "React package for the functional Bloqz state management library.",
   "keywords": [
     "bloc",
@@ -45,6 +45,10 @@
     "@bloqz/core": "workspace:^"
   },
   "devDependencies": {
-    "react": "^18.0.0 || ^19.0.0"
+    "@testing-library/react": "^16.3.0",
+    "@types/lodash": "^4.17.21",
+    "@types/react": "^19.2.7",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   }
 }

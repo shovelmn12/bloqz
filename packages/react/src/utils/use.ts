@@ -14,9 +14,8 @@ import {
   AddStrategy,
   CloseStrategy,
 } from "./strategies.js";
-import { map, distinctUntilChanged } from "./stream.js";
+import { map, distinctUntilChanged, Observable } from "./stream.js";
 import { isEqual } from "lodash";
-import { Observable } from "./stream.js"; // Import Observable for type definition
 
 /**
  * A versatile React Hook for consuming a Bloc from Context.
@@ -110,8 +109,8 @@ export function useBloc<Event, State, T>(
   // Update the ref if the snapshot (derived from props/state during render) changes.
   // This handles the case where parent props change the selector's output immediately.
   if (isSelect) {
-     // We don't necessarily update ref here because useSyncExternalStore will call getSnapshot.
-     // But we need to ensure getSnapshot returns the LATEST value if it was updated by subscription.
+    // We don't necessarily update ref here because useSyncExternalStore will call getSnapshot.
+    // But we need to ensure getSnapshot returns the LATEST value if it was updated by subscription.
   }
 
   const subscribe = useCallback(
@@ -125,7 +124,7 @@ export function useBloc<Event, State, T>(
 
       const subscription = bloc.state$
         .pipe(map(selector), distinctUntilChanged(isEqual))
-        .subscribe((val) => {
+        .subscribe((val: unknown) => {
           selectedValueRef.current = val;
           onStoreChange();
         });

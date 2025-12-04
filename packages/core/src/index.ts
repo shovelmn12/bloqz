@@ -3,7 +3,7 @@ export { createBloc, createPipeBloc } from "./utils/create.js";
 
 // Core Types
 export type { Bloc } from "./models/bloc.js";
-export { EMPTY as EMPTY_BLOC } from "./models/bloc.js";
+export { EMPTY } from "./models/bloc.js";
 export type { BlocContext } from "./models/context.js";
 
 // Configuration Types
