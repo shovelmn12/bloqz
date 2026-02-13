@@ -17,7 +17,14 @@ export type RelayEvent = {
  * @param topic The topic the event was emitted on (e.g., 'user', 'cart').
  * @param event The event payload.
  */
-export type RelayHandler = (topic: string, event: RelayEvent) => void;
+export type RelayTopicHandler<T, E> = (topic: T, event: E) => void;
+
+/**
+ * A handler function that receives the event for a matched subscription.
+ *
+ * @param event The event payload.
+ */
+export type RelayHandler<E> = (event: E) => void;
 
 /**
  * A predicate function used for advanced event filtering. It receives the full
@@ -27,14 +34,14 @@ export type RelayHandler = (topic: string, event: RelayEvent) => void;
  * @param event The event payload.
  * @returns `true` if the subscription handler should be invoked.
  */
-export type RelayPredicate = (topic: string, event: RelayEvent) => boolean;
+export type RelayPredicate<T, E> = (topic: T, event: E) => boolean;
 
 /**
  * A non-generic, RxJS-powered event bus that supports pattern-based
  * and predicate-based subscriptions. It serves as a central hub for
  * cross-cutting communication, such as between Blocs.
  */
-export interface Relay {
+export interface Relay<Events extends RelayEvent> {
   /**
    * Emits an event to a specific topic. All active subscriptions will be
    * evaluated against the event, and matching handlers will be invoked.
@@ -43,7 +50,7 @@ export interface Relay {
    * @param event The event payload, which MUST include a `type` property
    * (e.g., `{ type: 'login', userId: '123' }`).
    */
-  emit(topic: string, event: RelayEvent): void;
+  emit<T extends keyof Events>(topic: T, event: Events[T]): void;
 
   /**
    * Disposes of the relay, completing its internal event stream and
@@ -53,35 +60,27 @@ export interface Relay {
   dispose(): void;
 
   /**
-   * Registers a callback for events matching a specific string pattern.
-   * The pattern allows for filtering by topic and event type.
+   * Registers a callback for events matching a specific topic.
    *
-   * @param pattern A string pattern to match against topics and event types.
-   *   - `*`: Wildcard, matches any topic and event.
-   *   - `topic.*`: Matches any event on a specific topic.
-   *   - `*.{type1|type2}`: Matches specific event types on any topic.
-   *   - `topic.{type1|type2}`: Matches specific event types on a specific topic.
-   *   - `topic1|topic2`: Matches any event on a list of topics.
+   * @param topic The topic to listen to.
    * @param callback The callback to execute when a matching event is emitted.
    * @returns A function to unregister the callback and unsubscribe.
    *
    * @example
-   * on('user.{login|logout}', (topic, event) => { ... });
-   * on('cart', (topic, event) => { ... }); // same as cart.*
+   * on('user', (event) => { ... });
    * on('*', (topic, event) => { ... });
    */
-  on(pattern: string, callback: RelayHandler): () => void;
+  on<T extends keyof Events>(
+    topic: T,
+    callback: RelayHandler<Events[T]>,
+  ): () => void;
 
   /**
-   * Registers a callback for events that pass a custom predicate function.
-   * This allows for more complex filtering logic than string patterns.
+   * Registers a callback for all events emitted on the relay.
    *
-   * @param predicate A function that returns `true` for events to listen to.
-   * @param callback The callback to execute for events that pass the predicate.
+   * @param topic The wildcard pattern '*'.
+   * @param callback The callback to execute when any event is emitted.
    * @returns A function to unregister the callback and unsubscribe.
-   *
-   * @example
-   * on((topic, event) => topic === 'user' && event.type === 'login', callback);
    */
-  on(predicate: RelayPredicate, callback: RelayHandler): () => void;
+  on(topic: "*", callback: RelayTopicHandler<string, RelayEvent>): () => void;
 }

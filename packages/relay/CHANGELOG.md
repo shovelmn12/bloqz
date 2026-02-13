@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-02-13
+
+### Changed
+- **Relay Interface:** Simplified the `Relay` interface to focus on exact topic subscriptions.
+- **Removed:** Support for topic patterns (regex) and predicate-based subscriptions in `on`.
+- **API Change:** `RelayHandler` now only receives the event payload for specific topic subscriptions.
+- **API Change:** Added explicit support for the `*` wildcard topic, which receives both `topic` and `event`.
+
 ## [1.2.0] - 2025-12-03
 
 ### Changed
