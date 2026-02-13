@@ -1,10 +1,12 @@
 import { useContext } from "react";
-import { Relay } from "@bloqz/relay";
+import { Relay, RelayEventsMap } from "@bloqz/relay";
 
 import { RelayContext } from "./context.js";
 
 /**
- * A hook to get the Relay event bus instance.
+ * A hook to get the Relay event bus instance from the context.
+ *
+ * @template Events The map of events supported by the Relay instance.
  * @returns The Relay instance.
  * @example
  * ```tsx
@@ -17,6 +19,6 @@ import { RelayContext } from "./context.js";
  * }
  * ```
  */
-export function useRelay(): Relay {
+export function useRelay<Events extends RelayEventsMap>(): Relay<Events> {
   return useContext(RelayContext);
 }

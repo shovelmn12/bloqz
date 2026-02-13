@@ -1,11 +1,17 @@
 import { createContext } from "react";
-import { Relay, createRelay } from "@bloqz/relay";
+import { Relay } from "@bloqz/relay";
 
 /**
- * The context for the Relay event bus.
+ * The React context that holds the Relay event bus instance.
  *
- * @internal This context is not intended for direct use.
- * Instead, use the `RelayProvider` to provide the Relay instance
- * and the `useRelay` hook to access it.
+ * The context value defaults to a no-op Relay instance to avoid null checks
+ * when the hook is used without a provider.
+ *
+ * @internal This context is intended for internal use by the `RelayProvider` 
+ * and `useRelay` hook. Direct consumption is discouraged.
  */
-export const RelayContext = createContext<Relay>(createRelay());
+export const RelayContext = createContext<Relay<any>>({
+  emit: () => {},
+  on: () => () => {},
+  dispose: () => {},
+});
