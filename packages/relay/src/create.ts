@@ -23,13 +23,15 @@ export function createRelay<Events extends RelayEvent = any>(): Relay<Events> {
     },
     on<T extends keyof Events>(
       topicOrPattern: T | "*",
-      callback: RelayHandler<Events[T]> | RelayTopicHandler<string, RelayEvent>
+      callback: RelayHandler<Events[T]> | RelayTopicHandler<string, RelayEvent>,
     ): () => void {
       // Create a new subscription to the main stream.
       const subscription = eventStream$
         .pipe(
           // Filter by topic or allow all if wildcard.
-          filter(({ topic }) => topicOrPattern === "*" || topic === topicOrPattern)
+          filter(
+            ({ topic }) => topicOrPattern === "*" || topic === topicOrPattern,
+          ),
         )
         .subscribe(({ topic, event }) => {
           // When an event passes the filter, call the user's handler.
