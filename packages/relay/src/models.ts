@@ -1,4 +1,12 @@
 /**
+ * A map of event topics to their corresponding event payloads.
+ * This is used to provide type safety for relay operations.
+ */
+export type RelayEventsMap = {
+  readonly [topic: string]: RelayEvent;
+};
+
+/**
  * The standard shape for any event payload passed through the relay.
  * It must include a `type` string to allow for pattern-based filtering.
  *
@@ -41,7 +49,7 @@ export type RelayPredicate<T, E> = (topic: T, event: E) => boolean;
  * and predicate-based subscriptions. It serves as a central hub for
  * cross-cutting communication, such as between Blocs.
  */
-export interface Relay<Events extends RelayEvent> {
+export interface Relay<Events extends RelayEventsMap> {
   /**
    * Emits an event to a specific topic. All active subscriptions will be
    * evaluated against the event, and matching handlers will be invoked.
