@@ -4,6 +4,7 @@ import { filter } from "rxjs/operators";
 import {
   Relay,
   RelayEvent,
+  RelayEventsMap,
   RelayHandler,
   RelayTopicHandler,
 } from "./models.js";
@@ -12,7 +13,7 @@ import {
  * Factory function to create a new Relay instance using RxJS.
  * @returns A new Relay instance.
  */
-export function createRelay<Events extends RelayEvent = any>(): Relay<Events> {
+export function createRelay<Events extends RelayEventsMap>(): Relay<Events> {
   // The single, central stream for all events.
   const eventStream$ = new Subject<{ topic: string; event: RelayEvent }>();
 
