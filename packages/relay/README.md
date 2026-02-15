@@ -1,13 +1,12 @@
 # @bloqz/relay
 
-The `@bloqz/relay` package provides a lightweight, RxJS-powered event bus for enabling communication between different parts of an application. It uses a flexible subscription model that supports both simple string patterns and advanced predicate functions, making it a powerful solution for decoupled architectures.
+The `@bloqz/relay` package provides a lightweight, RxJS-powered event bus for enabling communication between different parts of an application. It uses a flexible subscription model and supports TypeScript generics for full type safety.
 
 ## Core Concepts
 
 - **Relay**: An event bus that allows for emitting and listening to events.
 - **Topics**: Named channels for events (e.g., 'user', 'cart'), allowing for targeted communication.
-- **Events**: The data payload associated with a topic, which must have a `type` property.
-- **Pattern Matching**: A simple yet powerful syntax for subscribing to events based on their topic and type.
+- **Events**: The data payload associated with a topic. All events must be objects and are recommended to have a `type` property.
 
 ## Installation
 
@@ -15,7 +14,7 @@ This package is part of the Bloqz monorepo. To use it, add it as a dependency in
 
 ```json
 "dependencies": {
-  "@bloqz/relay": "1.0.0"
+  "@bloqz/relay": "2.0.2"
 }
 ```
 
@@ -32,52 +31,59 @@ import { createRelay } from '@bloqz/relay';
 const appRelay = createRelay();
 ```
 
+### Type Safety
+
+You can define the events available in your relay to get full TypeScript support.
+
+```typescript
+import { createRelay, RelayEventsMap } from '@bloqz/relay';
+
+interface AppEvents extends RelayEventsMap {
+  user: { type: 'login'; userId: string } | { type: 'logout' };
+  cart: { type: 'add'; productId: string };
+}
+
+const appRelay = createRelay<AppEvents>();
+
+// Types are checked here!
+appRelay.emit('user', { type: 'login', userId: '123' });
+```
+
 ### Emitting Events
 
-You can emit an event to a specific topic using the `emit` method. The event payload must be an object with a `type` property.
+You can emit an event to a specific topic using the `emit` method.
 
 ```typescript
 appRelay.emit('user', { type: 'login', userId: '123' });
 appRelay.emit('notifications', { type: 'new', message: 'Welcome!' });
 ```
 
-### Listening with String Patterns
+### Listening for Events
 
-You can listen for events using a string pattern with the `on` method. This is the most common way to subscribe. The method returns an `unsubscribe` function.
+You can listen for events on a specific topic or use the wildcard `*` to listen to all events. The `on` method returns an `unsubscribe` function.
+
+#### Specific Topic
+
+When listening to a specific topic, the handler receives the event object.
 
 ```typescript
-// Listen for login and logout events on the 'user' topic
-const unsubscribe = appRelay.on('user.{login|logout}', (topic, event) => {
-  console.log(`Received event '${event.type}' on topic '${topic}'`);
+const unsubscribe = appRelay.on('user', (event) => {
+  console.log(`User event received: ${event.type}`);
 });
 
 // To stop listening
 unsubscribe();
 ```
 
-### Listening with a Predicate Function
+#### Wildcard
 
-For more complex scenarios, you can use a predicate function to filter events. The predicate receives the topic and event and should return `true` if the handler should be executed.
+When listening with `*`, the handler receives both the topic name and the event object.
 
 ```typescript
-const unsubscribe = appRelay.on((topic, event) => {
-  return topic === 'user' && event.type === 'login';
-}, (topic, event) => {
-  console.log('User logged in:', event);
+const unsubscribe = appRelay.on('*', (topic, event) => {
+  console.log(`Event '${event.type}' received on topic '${topic}'`);
 });
 ```
-
-### Pattern Matching Syntax
-
-The pattern matching syntax provides a concise way to subscribe to events:
-
-| Pattern                 | Description                                           |
-| ----------------------- | ----------------------------------------------------- |
-| `*`                     | Matches any topic and any event type.                 |
-| `user`                  | Matches any event on the `user` topic.                |
-| `user|cart`             | Matches any event on the `user` or `cart` topics.     |
-| `*.login`               | Matches `login` events on any topic.                  |
-| `user.{login|logout}`   | Matches `login` or `logout` events on the `user` topic. |
 
 ### Disposing the Relay
 
