@@ -14,7 +14,7 @@ import { switchMap } from "rxjs";
  * @template Event The specific event type this transformer will apply to.
  * @returns {EventTransformer<Event>} An event transformer function implementing restartable processing.
  * @example
- * bloc.on('SEARCH_QUERY_CHANGED', handleSearch, { transformer: restartable() });
+ * // handlers: { SEARCH_QUERY_CHANGED: { handler: handleSearch, transformer: restartable() } }
  */
 export function restartable<Event>(): EventTransformer<Event> {
   // switchMap subscribes to the new inner Observable (project result) and unsubscribes from the previous one.

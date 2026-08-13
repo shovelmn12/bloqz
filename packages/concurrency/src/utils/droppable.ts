@@ -14,7 +14,7 @@ import { exhaustMap } from "rxjs";
  * @template Event The specific event type this transformer will apply to.
  * @returns {EventTransformer<Event>} An event transformer function implementing droppable processing.
  * @example
- * bloc.on('SUBMIT_FORM', handleSubmit, { transformer: droppable() });
+ * // handlers: { SUBMIT_FORM: { handler: handleSubmit, transformer: droppable() } }
  */
 export function droppable<Event>(): EventTransformer<Event> {
   // exhaustMap ignores new source emissions while the current inner Observable (project result) is active.

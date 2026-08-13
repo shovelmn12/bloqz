@@ -14,7 +14,7 @@ import { concatMap } from "rxjs";
  * @template Event The specific event type this transformer will apply to.
  * @returns {EventTransformer<Event>} An event transformer function implementing sequential processing.
  * @example
- * bloc.on('SAVE_DATA', handleSave, { transformer: sequential() }); // Or often just bloc.on('SAVE_DATA', handleSave);
+ * // handlers: { SAVE_DATA: { handler: handleSave, transformer: sequential() } }
  */
 export function sequential<Event>(): EventTransformer<Event> {
   // The project function wraps the EventHandler execution.
