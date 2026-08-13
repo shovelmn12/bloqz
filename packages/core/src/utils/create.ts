@@ -204,17 +204,14 @@ export function createBloc<Event extends { type: string }, State>(
 
   // --- Populate Handler Registry from Handlers Object ---
   const handlerConfigs = Object.entries(handlers)
-    .map(([eventTypeIdentifier, handlerInput]) =>
-      // Create a config entry (or undefined) for each item in the handlers object
-      createHandlerConfigEntry<Event, State>(
+    .flatMap(([eventTypeIdentifier, handlerInput]) => {
+      const config = createHandlerConfigEntry<Event, State>(
         eventTypeIdentifier,
         handlerInput as EventHandler<any, State> | undefined // Ensure type matches helper
-      )
-    )
-    // Filter out any undefined results (from undefined inputs or potential future validation)
-    .filter(
-      (config): config is HandlerConfig<Event, State> => config !== undefined
-    ); // Type predicate for safety
+      );
+      // Only keep valid configs; the helper returns undefined for falsy inputs.
+      return config ? [config] : [];
+    });
 
   /** @internal Use a Map internally for consistency */
   const _handlerRegistry = new Map<
@@ -303,12 +300,13 @@ export function createBloc<Event extends { type: string }, State>(
           // to manage sync/async handlers uniformly and catch errors.
           return from(
             Promise.resolve().then(() => {
-              // Create the context for the handler with a fresh state snapshot.
+              // Create the context for the handler with a frozen snapshot of the
+              // state at the moment the handler starts executing. This keeps the
+              // value stable for the handler's full lifetime (including async
+              // work), even if other handlers update state concurrently.
               const context: BlocContext<State> = {
                 id: bloc.id,
-                get value(): State {
-                  return _stateSubject.getValue(); // Fresh state value for handler context
-                },
+                value: _stateSubject.getValue(),
                 update: updateState,
               };
               // Execute the user's handler function.
@@ -462,7 +460,9 @@ export function createPipeBloc<Event, State>(
    * We will need to subscribe to the source to get this value.
    * @internal
    */
-  const _stateSubject = new BehaviorSubject<State>(props.initialState);
+  const _stateSubject = new BehaviorSubject<State>(
+    props.initialState as State
+  );
 
   /** @internal A boolean flag to track if the bloc has been closed. */
   let _isClosed = false;

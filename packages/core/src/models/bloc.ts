@@ -19,8 +19,7 @@ export interface Bloc<Event, State> {
   /**
    * An Observable stream that emits the Bloc's state whenever it changes.
    * Subscribers receive the latest state immediately upon subscription and
-   * subsequent updates as they occur. Uses `shareReplay(1)` internally
-   * for efficiency and replaying the last state to new subscribers.
+   * subsequent updates as they occur.
    *
    * @example
    * const subscription = myBloc.state$.subscribe(currentState => {
