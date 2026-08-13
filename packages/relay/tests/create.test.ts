@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { createRelay } from "../../src/create";
-import { RelayEvent } from "../../src/models";
+import { createRelay } from "../src/create.js";
+import { RelayEvent } from "../src/models.js";
 
 describe("createRelay", () => {
   it("should create a new relay", () => {
