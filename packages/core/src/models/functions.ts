@@ -6,7 +6,7 @@ import { BlocContext } from "../models/index.js";
 /**
  * Extracts a union of all string literal types used in the `type` property
  * across all members of the `Event` union type.
- * Useful for constraining string identifiers passed to `bloc.on`.
+ * Useful for constraining the keys of the `handlers` object.
  *
  * @template Event The event union type (e.g., `CounterEvent`).
  * @example
@@ -20,8 +20,7 @@ export type EventTypeOf<Event> = Event extends { type: infer T extends string }
 /**
  * Selects and extracts the specific event type from a union `Event`
  * that matches a given string literal `TType` for its `type` property.
- * Useful for typing the `event` parameter within an `EventHandler` when using
- * string literal identifiers with `bloc.on`.
+ * Useful for typing the `event` parameter within an `EventHandler`.
  *
  * @template Event The event union type (e.g., `CounterEvent`).
  * @template TType The specific string literal type of the `type` property to match (e.g., `'INCREMENT'`).
@@ -110,7 +109,7 @@ export type EventHandler<Event, State> =
 
 /**
  * A type that represents the mechanism used to identify and register handlers
- * for specific event types within the `bloc.on` method. It supports two forms:
+ * for specific event types within the `handlers` object. It supports two forms:
  *
  * 1.  **String Literal Type:** If the event union (`BaseEvent`) uses discriminated unions
  *     with a `type` property, you can provide the string literal corresponding to

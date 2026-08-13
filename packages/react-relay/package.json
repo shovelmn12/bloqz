@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/react-relay",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "React bindings for the @bloqz/relay package.",
   "keywords": [
     "bloc",
@@ -48,7 +48,7 @@
   "devDependencies": {
     "@testing-library/react": "^16.3.0",
     "@types/react": "^19.2.7",
-    "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
   }
 }

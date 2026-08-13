@@ -43,7 +43,7 @@ function MyComponent() {
   const relay = useRelay();
 
   useEffect(() => {
-    const unsubscribe = relay.on('user', (topic, event) => {
+    const unsubscribe = relay.on('user', (event) => {
       console.log(`User logged in:`, event);
     });
 

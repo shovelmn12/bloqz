@@ -12,8 +12,10 @@ export interface BlocContext<State> {
   readonly id: string;
 
   /**
-   * A read-only snapshot of the Bloc's state at the time the event handler
-   * started processing. Use this to make decisions based on the current state.
+   * A frozen snapshot of the Bloc's state taken when the event handler started
+   * processing. It does not change for the duration of the handler execution,
+   * even for async handlers while other events update state concurrently.
+   * Use this for decisions based on the state at the time the event arrived.
    */
   readonly value: State;
 

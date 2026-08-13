@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.0.0] - 2026-08-13
+
+### Changed
+- **Breaking:** `BlocContext.value` is now a frozen snapshot taken when the handler starts executing. It no longer changes while an async handler runs, even if other handlers update state concurrently. Use the functional `update(s => ...)` form when you need the freshest state.
+
+### Added
+- `createPipeBloc` `initialState` is now optional. When omitted, state is `undefined` until the source emits its first value.
+
+### Fixed
+- `generateShortID` now uses `Date.now()` instead of `performance.now()`, which is unavailable in some SSR/older Node environments.
+
 ## [1.2.1] - 2025-12-03
 
 ### Changed

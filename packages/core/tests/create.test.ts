@@ -21,6 +21,7 @@ type CounterEvent =
   | { type: "INCREMENT"; amount: number }
   | { type: "DECREMENT"; amount: number }
   | { type: "SET"; amount: number }
+  | { type: "SNEAK" }
   | { type: "ERROR" }
   | { type: "UNHANDLED" };
 
@@ -95,6 +96,45 @@ describe("createBloc", () => {
     const receivedStates = await statesPromise;
 
     expect(receivedStates).toEqual(expectedStates);
+    bloc.close();
+  });
+
+  it("should freeze context.value for the duration of an async handler", async () => {
+    const bloc = createBloc<CounterEvent, CounterState>({
+      initialState: { count: 0 },
+      handlers: {
+        INCREMENT: (event, { update }) => {
+          update((s) => ({ ...s, count: s.count + event.amount }));
+        },
+        SET: (event, { update }) => {
+          update({ count: event.amount });
+        },
+        // Async handler that reads context.value after an await, while the
+        // default (concurrent) transformer allows other events to run.
+        SNEAK: async (_event, { value, update }) => {
+          await new Promise((res) => setTimeout(res, 0));
+          update({ count: value.count + 100 });
+        },
+      },
+    });
+
+    // Fire the async SNEAK handler first (reads { count: 0 }), then immediately
+    // update the state via SET while SNEAK is still awaiting.
+    const resultsPromise = firstValueFrom(
+      bloc.state$.pipe(skip(1), take(2), toArray())
+    );
+    bloc.add({ type: "SNEAK" });
+    bloc.add({ type: "SET", amount: 5 });
+
+    // SNEAK's snapshot was { count: 0 }, so its update produces 0 + 100 = 100.
+    // The concurrent SET produces 5. Order between the two is not guaranteed,
+    // so assert the set of resulting states instead.
+    const results = await resultsPromise;
+    expect(results.sort((a, b) => a.count - b.count)).toEqual([
+      { count: 5 },
+      { count: 100 },
+    ]);
+
     bloc.close();
   });
 

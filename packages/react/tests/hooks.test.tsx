@@ -109,6 +109,29 @@ describe("React Hooks", () => {
       bloc.close();
     });
 
+    it("should re-render on change with a stable/memoized selector", async () => {
+      const selectCount = (s: CounterState) => s.count;
+      const bloc = createCounterBloc({ initialState: { count: 0, name: "" } });
+      const { result } = renderHook(
+        () => useBloc(BlocContext as any, select(selectCount)),
+        {
+          wrapper: (props) => wrapper({ ...props, bloc }),
+        }
+      );
+
+      expect(result.current).toBe(0);
+
+      act(() => {
+        bloc.add({ type: "INCREMENT" });
+      });
+
+      await waitFor(() => {
+        expect(result.current).toBe(1);
+      });
+
+      bloc.close();
+    });
+
     it("should only re-render when the selected state changes", () => {
       const bloc = createCounterBloc({
         initialState: { count: 0, name: "initial" },

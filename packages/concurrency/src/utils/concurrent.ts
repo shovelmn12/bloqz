@@ -14,8 +14,8 @@ import { mergeMap } from "rxjs";
  * @template Event The specific event type this transformer will apply to.
  * @returns {EventTransformer<Event>} An event transformer function implementing concurrent processing.
  * @example
- * // If handleLogToServer can run multiple times in parallel safely
- * bloc.on('LOG_EVENT', handleLogToServer, { transformer: concurrent() });
+ * // If handleLogToServer can run multiple times in parallel safely:
+ * // handlers: { LOG_EVENT: { handler: handleLogToServer, transformer: concurrent() } }
  */
 export function concurrent<Event>(): EventTransformer<Event> {
   // mergeMap subscribes to all inner Observables (project results) immediately, allowing parallel execution.

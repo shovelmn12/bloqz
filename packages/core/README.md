@@ -42,10 +42,9 @@ yarn add @bloqz/core
 ## Basic Usage
 
 ```typescript
-import { createBloc, BlocErrorHandler } from '@bloqz/core';
+import { createBloc, ErrorHandler } from '@bloqz/core';
 // Assumes transformers like sequential, restartable are imported from @bloqz/concurrency or elsewhere
 import { sequential, restartable } from '@bloqz/concurrency'; // Example import
-import { shareReplay } from 'rxjs';
 
 // 1. Define State Interface
 interface CounterState {
@@ -63,7 +62,7 @@ interface FetchDataEvent { type: 'FETCH_DATA'; id: string; }
 type CounterEvent = IncrementEvent | DecrementEvent | FetchDataEvent;
 
 // 3. Optional: Define a global error handler
-const handleBlocError: BlocErrorHandler<CounterEvent> = (error, event) => {
+const handleBlocError: ErrorHandler<CounterEvent> = (error, event) => {
   console.error(`>>> Global Error:`, { error, eventType: event.type });
   // Send to error tracking service...
 };

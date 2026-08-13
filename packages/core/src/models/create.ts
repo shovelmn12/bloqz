@@ -50,8 +50,12 @@ export interface CreatePipeBlocProps<State> {
    */
   readonly id?: string;
 
-  /** The initial state the Bloc should start with. */
-  readonly initialState: State;
+  /**
+   * The initial state the Bloc should start with.
+   * Optional: when omitted, the Bloc starts with `undefined` until the source
+   * emits its first value (e.g., when the source is a `BehaviorSubject`).
+   */
+  readonly initialState?: State;
 
   /**
    * The source Observable stream that will drive the state of this Bloc.

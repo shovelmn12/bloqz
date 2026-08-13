@@ -13,20 +13,35 @@
     "moduleResolution": "nodenext",
     "declaration": true,
     "sourceMap": true,
+    "rootDir": "./src",
     "outDir": "./dist",
     "removeComments": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "target": "esnext",
-    "lib": ["ES2022", "DOM"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@bloqz/relay": ["../relay/src"],
-      "@bloqz/core": ["../core/src"]
+      "@bloqz/relay": [
+        "../relay/src"
+      ],
+      "@bloqz/core": [
+        "../core/src"
+      ]
     }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

@@ -9,7 +9,7 @@ Concurrency utilities (Event Transformers) for the TypeScript BLoC pattern imple
 
 ## Purpose
 
-This package provides helper functions that create standard `EventTransformer` implementations based on common RxJS operators. These transformers are used with the `bloc.on` method (from `@bloqz/core` or a similar BLoC implementation) to control how event handlers execute, especially when events are dispatched rapidly or involve asynchronous operations.
+This package provides helper functions that create standard `EventTransformer` implementations based on common RxJS operators. These transformers are used with the `handlers` object from `@bloqz/core` to control how event handlers execute, especially when events are dispatched rapidly or involve asynchronous operations.
 
 Choosing the right concurrency strategy is crucial for preventing race conditions, optimizing performance, and ensuring predictable behavior in reactive applications.
 
@@ -29,10 +29,10 @@ This package requires `rxjs` as a peer dependency. It's designed to be used with
 
 ## Usage
 
-Import the desired transformer function and provide it to the `options.transformer` property when registering an event handler using `bloc.on`.
+Import the desired transformer function and pass it as the `transformer` property of a handler definition in the `handlers` object when creating a Bloc.
 
 ```typescript
-import { createBloc, EventHandler } from '@bloqz/core'; // Assuming core package
+import { createBloc } from '@bloqz/core';
 import {
   sequential,
   restartable,
@@ -48,34 +48,30 @@ type MyEvent =
   | { type: 'SUBMIT' }
   | { type: 'LOG' };
 
-declare const bloc: Bloc<MyEvent, MyState>; // Your bloc instance
-declare const handleSave: EventHandler<ExtractEventByType<MyEvent, 'SAVE'>, MyState>;
-declare const handleSearch: EventHandler<ExtractEventByType<MyEvent, 'SEARCH'>, MyState>;
-declare const handleSubmit: EventHandler<ExtractEventByType<MyEvent, 'SUBMIT'>, MyState>;
-declare const handleLog: EventHandler<ExtractEventByType<MyEvent, 'LOG'>, MyState>;
-// ---------------------------------------
+const bloc = createBloc<MyEvent, MyState>({
+  initialState: { /* ... */ },
+  handlers: {
+    // Process SAVE events one after another
+    SAVE: { handler: handleSave, transformer: sequential() },
 
-// Process SAVE events one after another
-bloc.on('SAVE', handleSave, {
-  transformer: sequential(),
-});
+    // Process only the latest SEARCH event, cancel previous searches
+    SEARCH: { handler: handleSearch, transformer: restartable() },
 
-// Process only the latest SEARCH event, cancel previous searches
-bloc.on('SEARCH', handleSearch, {
-  transformer: restartable(),
-});
+    // Ignore subsequent SUBMIT events if one is already processing
+    SUBMIT: { handler: handleSubmit, transformer: droppable() },
 
-// Ignore subsequent SUBMIT events if one is already processing
-bloc.on('SUBMIT', handleSubmit, {
-  transformer: droppable(),
+    // Process LOG events concurrently (the default behavior)
+    LOG: { handler: handleLog, transformer: concurrent() },
+  },
 });
+```
 
-// Process LOG events concurrently (often the default behavior)
-bloc.on('LOG', handleLog, {
-  transformer: concurrent(), // Explicitly concurrent
-});
-// Or rely on the default if the core library defaults to concurrent
-// bloc.on('LOG', handleLog);
+Handlers can also be given directly as functions — in that case the default transformer (`concurrent`) is used:
+
+```typescript
+handlers: {
+  LOG: handleLog, // Equivalent to { handler: handleLog, transformer: concurrent() }
+}
 ```
 
 ## Available Transformers
@@ -93,7 +89,14 @@ bloc.on('LOG', handleLog, {
 
 ```typescript
 import { concurrent } from '@bloqz/concurrency';
-bloc.on('LOG_EVENT', handleLogToServer, { transformer: concurrent() });
+import { createBloc } from '@bloqz/core';
+
+const bloc = createBloc({
+  // ...
+  handlers: {
+    LOG_EVENT: { handler: handleLogToServer, transformer: concurrent() },
+  },
+});
 ```
 
 ---
@@ -109,7 +112,14 @@ bloc.on('LOG_EVENT', handleLogToServer, { transformer: concurrent() });
 
 ```typescript
 import { sequential } from '@bloqz/concurrency';
-bloc.on('SAVE_DATA', handleSave, { transformer: sequential() });
+import { createBloc } from '@bloqz/core';
+
+const bloc = createBloc({
+  // ...
+  handlers: {
+    SAVE_DATA: { handler: handleSave, transformer: sequential() },
+  },
+});
 ```
 
 ---
@@ -126,7 +136,14 @@ bloc.on('SAVE_DATA', handleSave, { transformer: sequential() });
 
 ```typescript
 import { restartable } from '@bloqz/concurrency';
-bloc.on('SEARCH_QUERY_CHANGED', handleSearch, { transformer: restartable() });
+import { createBloc } from '@bloqz/core';
+
+const bloc = createBloc({
+  // ...
+  handlers: {
+    SEARCH_QUERY_CHANGED: { handler: handleSearch, transformer: restartable() },
+  },
+});
 ```
 
 ---
@@ -143,7 +160,14 @@ bloc.on('SEARCH_QUERY_CHANGED', handleSearch, { transformer: restartable() });
 
 ```typescript
 import { droppable } from '@bloqz/concurrency';
-bloc.on('SUBMIT_FORM', handleSubmit, { transformer: droppable() });
+import { createBloc } from '@bloqz/core';
+
+const bloc = createBloc({
+  // ...
+  handlers: {
+    SUBMIT_FORM: { handler: handleSubmit, transformer: droppable() },
+  },
+});
 ```
 
 ---
