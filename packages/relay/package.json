@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/relay",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "A package for enabling inter-bloc communication using an event relay system.",
   "keywords": [
     "bloc",
