@@ -9,7 +9,6 @@ import {
   EMPTY,
   catchError,
   finalize,
-  from,
   Subscription,
 } from "./stream.js";
 import {
@@ -298,46 +297,88 @@ export function createBloc<Event extends { type: string }, State>(
         }
 
         // Define the `project` function passed to the event transformer.
-        // This function encapsulates the actual execution of the user's EventHandler.
-        const project = (event: Event): Observable<unknown> => {
-          // Wrap the handler execution in a Promise sequence handled by `from`
-          // to manage sync/async handlers uniformly and catch errors.
-          return from(
-            Promise.resolve().then(() => {
-              // Create the context for the handler with a frozen snapshot of the
-              // state at the moment the handler starts executing. This keeps the
-              // value stable for the handler's full lifetime (including async
-              // work), even if other handlers update state concurrently.
-              const context: BlocContext<State> = {
-                id: bloc.id,
-                value: _stateSubject.getValue(),
-                update: updateState,
-              };
-              // Execute the user's handler function.
-              return config.handler(event, context);
-            })
-          ).pipe(
-            // Catch errors specifically from this handler's execution.
-            catchError((error) => {
-              const errorEvent = event; // Capture event in scope for error reporting
+        // Each call represents one run of the user's EventHandler. The run is
+        // tied to the subscription made by the transformer: when the
+        // transformer unsubscribes (e.g. `switchMap` superseding it, or
+        // `close()` tearing down the pipeline), the run is aborted — its
+        // `signal` fires and its `update` becomes a no-op, so a cancelled
+        // run can no longer overwrite newer state.
+        const project = (event: Event): Observable<unknown> =>
+          new Observable<unknown>((subscriber) => {
+            const controller = new AbortController();
+            const { signal } = controller;
+            let finished = false;
+
+            /** Per-run `update` that is ignored once the run is aborted. */
+            const update: BlocContext<State>["update"] = (newValueOrFn) => {
+              if (signal.aborted) return;
+              updateState(newValueOrFn);
+            };
+
+            const reportError = (error: unknown): void => {
               console.error(
                 `Bloc: Error in handler for "${String(
                   config.eventTypeIdentifier
                 )}":`,
                 error,
                 "Event:",
-                errorEvent
+                event
               );
               // Invoke the global error callback if provided.
-              _onErrorCallback?.(error, errorEvent);
+              _onErrorCallback?.(error, event);
               // Emit the error details on the public errors$ stream.
-              _errorSubject.next({ event: errorEvent, error });
-              // Swallow the error by returning an empty Observable,
-              // preventing it from terminating the main event stream.
-              return EMPTY;
-            })
-          );
-        };
+              _errorSubject.next({ event, error });
+            };
+
+            // Run the handler asynchronously (in a microtask) so sync and
+            // async handlers are treated uniformly.
+            Promise.resolve()
+              .then(() => {
+                // The run was cancelled (or the bloc closed) before it started.
+                if (signal.aborted) return undefined;
+                // Create the context for the handler with a frozen snapshot of
+                // the state at the moment the handler starts executing. This
+                // keeps the value stable for the handler's full lifetime
+                // (including async work), even if other handlers update state
+                // concurrently.
+                const context: BlocContext<State> = {
+                  id: bloc.id,
+                  value: _stateSubject.getValue(),
+                  update,
+                  signal,
+                };
+                // Execute the user's handler function.
+                return config.handler(event, context);
+              })
+              .then(
+                (result) => {
+                  if (signal.aborted) return;
+                  finished = true;
+                  subscriber.next(result);
+                  subscriber.complete();
+                },
+                (error: unknown) => {
+                  // Errors of an aborted run are not reported.
+                  if (signal.aborted) return;
+                  finished = true;
+                  try {
+                    reportError(error);
+                  } catch (callbackError) {
+                    // A throwing onError callback is a pipeline-level error.
+                    subscriber.error(callbackError);
+                    return;
+                  }
+                  // Swallow the handler error so it does not terminate the
+                  // main event stream.
+                  subscriber.complete();
+                }
+              );
+
+            // Teardown: abort the run if it is unsubscribed before finishing.
+            return () => {
+              if (!finished) controller.abort();
+            };
+          });
 
         // Apply the specific concurrency transformer (e.g., concatMap, switchMap)
         // for this event type group.
@@ -351,7 +392,7 @@ export function createBloc<Event extends { type: string }, State>(
         );
       }),
       // Global error handler for the entire event processing pipeline.
-      // Catches errors not caught within individual handler's `catchError`.
+      // Catches errors not handled by the per-run error boundary in `project`.
       // Such errors usually indicate a problem in the RxJS pipeline itself.
       catchError((err) => {
         console.error(

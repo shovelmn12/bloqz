@@ -27,7 +27,28 @@ export interface BlocContext<State> {
    * State updates are processed asynchronously and may not be reflected
    * immediately in the `value` property within the same handler execution.
    *
+   * Once this handler run is aborted (see `signal`), calls to `update` are
+   * ignored, so a cancelled run cannot overwrite newer state.
+   *
    * @param newValueOrFn The new state value or a function to compute the new state.
    */
   readonly update: (newValue: State | ((currentState: State) => State)) => void;
+
+  /**
+   * An `AbortSignal` for this handler run. It is aborted when the run is
+   * cancelled before it finishes — e.g. superseded by a newer event under
+   * `restartable()` (switchMap), or when the Bloc is closed. Pass it to
+   * cancellable APIs (`fetch(url, { signal })`) or check `signal.aborted`
+   * to stop work early. After abort, `update` is a no-op.
+   *
+   * @example
+   * SEARCH: {
+   *   transformer: restartable(),
+   *   handler: async (event, { update, signal }) => {
+   *     const res = await fetch(`/search?q=${event.query}`, { signal });
+   *     update(await res.json());
+   *   },
+   * }
+   */
+  readonly signal: AbortSignal;
 }
