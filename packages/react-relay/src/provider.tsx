@@ -20,7 +20,11 @@ export interface RelayProviderProps<
    * provider mount, so passing an inline function is fine.
    * If not provided, a default Relay instance is created using `createRelay`.
    *
-   * The provider owns the returned relay and disposes it on unmount.
+   * The provider owns the returned relay and disposes it on unmount, so
+   * `create` must return a **new** relay. Do not return a relay that is shared
+   * with other providers or with code outside React: it would be disposed for
+   * everyone when this provider unmounts. To provide a shared relay, use
+   * `<RelayContext.Provider value={sharedRelay}>` instead; it never disposes it.
    */
   readonly create?: () => Relay<Events>;
 }
