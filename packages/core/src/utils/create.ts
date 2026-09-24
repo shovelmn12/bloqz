@@ -10,6 +10,7 @@ import {
   catchError,
   finalize,
   from,
+  Subscription,
 } from "./stream.js";
 import {
   BlocContext,
@@ -417,7 +418,9 @@ export function createBloc<Event extends { type: string }, State>(
  *
  * This is a special type of Bloc that does not process events. Its state is
  * driven entirely by an observable stream provided during creation. The
- * `add` method is a no-op, and the `errors$` stream is always empty.
+ * `add` method is a no-op. If the source errors, the error is emitted on
+ * `errors$` as `{ event: undefined, error }` and the bloc closes; if the
+ * source completes, the bloc closes too.
  *
  * It is useful for wrapping an existing reactive state source (like a
  * database listener or another stream) with the standard `Bloc` interface,
@@ -456,46 +459,69 @@ export function createPipeBloc<Event, State>(
 
   // --- Private State & Subjects (managed by closure) ---
   /**
-   * The `BehaviorSubject` that will hold the current state.
-   * Its initial value is derived from the first value of the source$ stream
-   * or a default `undefined` if the source is an empty observable.
-   * We will need to subscribe to the source to get this value.
+   * The `BehaviorSubject` that holds the current state. It starts with the
+   * optional `initialState` (or `undefined`) and then mirrors every value
+   * emitted by `source$`.
    * @internal
    */
   const _stateSubject = new BehaviorSubject<State>(
     props.initialState as State
   );
 
+  /**
+   * Emits source errors (with `event: undefined`, since a pipe bloc has no
+   * events) before the bloc closes.
+   * @internal
+   */
+  const _errorSubject = new Subject<{
+    event: Event | undefined;
+    error: unknown;
+  }>();
+
   /** @internal A boolean flag to track if the bloc has been closed. */
   let _isClosed = false;
 
   /**
-   * The subscription to the source stream. This needs to be stored so we can
-   * unsubscribe from it when the bloc is closed.
+   * The subscription to the source stream. It is `undefined` until
+   * `source$.subscribe` returns, which matters when the source completes or
+   * errors synchronously during subscription (e.g. `of(1)`, `EMPTY`).
    * @internal
    */
-  const _sourceSubscription = source$.subscribe({
+  let _sourceSubscription: Subscription | undefined;
+
+  // --- Cleanup (`close` method) ---
+  // Declared before subscribing so a synchronously finishing source can call it.
+  /** @internal */
+  const close = (): void => {
+    if (_isClosed) return;
+    _isClosed = true;
+
+    // Unsubscribe from the source stream to stop receiving updates. If the
+    // source finished synchronously, the subscription is not assigned yet and
+    // is unsubscribed right after `subscribe` returns (see below).
+    _sourceSubscription?.unsubscribe();
+
+    // Complete the subjects to signal completion to all subscribers.
+    _stateSubject.complete();
+    _errorSubject.complete();
+  };
+
+  _sourceSubscription = source$.subscribe({
     next: (value) => _stateSubject.next(value),
-    error: (err) => {
+    error: (error) => {
       // In a pipe bloc, the source stream's errors are considered fatal.
-      console.error("PipeBloc: Source stream terminated with an error:", err);
-      // The `errors$` stream is empty, so we just log and close.
+      console.error("PipeBloc: Source stream terminated with an error:", error);
+      _errorSubject.next({ event: undefined, error });
       close();
     },
-    complete: () => {
-      // If the source stream completes, we also close the bloc.
-      if (!_stateSubject) {
-        // Handle the case where the source completes before emitting any value
-        // We'll create a BehaviorSubject with a default value and then complete it.
-        // This behavior might need refinement depending on user expectations.
-        // For now, let's just log and close, as the `state` would never be set.
-        console.warn(
-          "PipeBloc: Source stream completed without emitting any state."
-        );
-      }
-      close();
-    },
+    // If the source stream completes, the bloc closes as well.
+    complete: () => close(),
   });
+
+  // The source finished synchronously during `subscribe`; release it now.
+  if (_isClosed) {
+    _sourceSubscription.unsubscribe();
+  }
 
   // --- Event Dispatch (`add` method) ---
   /**
@@ -511,20 +537,6 @@ export function createPipeBloc<Event, State>(
     }
   };
 
-  // --- Cleanup (`close` method) ---
-  /** @internal */
-  const close = (): void => {
-    if (_isClosed) return;
-    _isClosed = true;
-
-    // Unsubscribe from the source stream to stop receiving updates.
-    _sourceSubscription.unsubscribe();
-
-    // Complete the state subject to signal completion to all subscribers.
-    _stateSubject.complete();
-    // No event or error subjects to complete as they are empty.
-  };
-
   // --- Create the Public API Object ---
   const bloc: Bloc<Event, State> = {
     id: id ?? generateShortID(),
@@ -532,7 +544,7 @@ export function createPipeBloc<Event, State>(
     get state() {
       return _stateSubject.getValue();
     },
-    errors$: EMPTY as Observable<{ event: Event; error: unknown }>, // A pipe bloc has no events or handlers to produce errors.
+    errors$: _errorSubject.asObservable(),
     add,
     close,
     get isClosed() {
