@@ -63,7 +63,8 @@ type CounterEvent = IncrementEvent | DecrementEvent | FetchDataEvent;
 
 // 3. Optional: Define a global error handler
 const handleBlocError: ErrorHandler<CounterEvent> = (error, event) => {
-  console.error(`>>> Global Error:`, { error, eventType: event.type });
+  // `event` is undefined for pipeline-level errors not tied to an event
+  console.error(`>>> Global Error:`, { error, eventType: event?.type });
   // Send to error tracking service...
 };
 
