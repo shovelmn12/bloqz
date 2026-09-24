@@ -47,13 +47,16 @@ importers:
     devDependencies:
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.7(@types/react@19.2.7)
       react:
         specifier: 19.2.1
         version: 19.2.1
@@ -62,17 +65,19 @@ importers:
         version: 19.2.1(react@19.2.1)
 
   packages/react-relay:
-    dependencies:
+    devDependencies:
       '@bloqz/relay':
         specifier: workspace:^
         version: link:../relay
-    devDependencies:
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        version: 16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.7(@types/react@19.2.7)
       react:
         specifier: 19.2.1
         version: 19.2.1
@@ -82,9 +87,6 @@ importers:
 
   packages/relay:
     dependencies:
-      '@bloqz/core':
-        specifier: workspace:^
-        version: link:../core
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
@@ -470,10 +472,10 @@ packages:
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
 
-  '@types/react-dom@18.3.7':
-    resolution: {integrity: sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ==}
+  '@types/react-dom@19.2.7':
+    resolution: {integrity: sha512-I8bPpDLcHBv1qiIiXDCy71Rt8eQDKJP0sMSWJphDdAcdqiJ1sGpZamavoEIRZmYzjia9LuEb2HlYdDpmoENpvQ==}
     peerDependencies:
-      '@types/react': ^18.0.0
+      '@types/react': ^19.2.0
 
   '@types/react@19.2.7':
     resolution: {integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==}
@@ -1125,7 +1127,7 @@ snapshots:
       picocolors: 1.1.1
       pretty-format: 27.5.1
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@18.3.7(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.1)(@types/react-dom@19.2.7(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@testing-library/dom': 10.4.1
@@ -1133,7 +1135,7 @@ snapshots:
       react-dom: 19.2.1(react@19.2.1)
     optionalDependencies:
       '@types/react': 19.2.7
-      '@types/react-dom': 18.3.7(@types/react@19.2.7)
+      '@types/react-dom': 19.2.7(@types/react@19.2.7)
 
   '@types/aria-query@5.0.4': {}
 
@@ -1156,10 +1158,9 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/react-dom@18.3.7(@types/react@19.2.7)':
+  '@types/react-dom@19.2.7(@types/react@19.2.7)':
     dependencies:
       '@types/react': 19.2.7
-    optional: true
 
   '@types/react@19.2.7':
     dependencies:
