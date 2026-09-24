@@ -17,15 +17,17 @@ Choosing the right concurrency strategy is crucial for preventing race condition
 
 ```bash
 # Using npm
-npm install @bloqz/concurrency rxjs
+npm install @bloqz/concurrency @bloqz/core
 
 # Using yarn
-yarn add @bloqz/concurrency rxjs
+yarn add @bloqz/concurrency @bloqz/core
 ```
 
 **Peer Dependencies:**
 
-This package requires `rxjs` as a peer dependency. It's designed to be used with a core BLoC library (like `@bloqz/core`) that defines the `EventTransformer` type.
+*   `@bloqz/core` ^3.0.0 (provides the `EventTransformer` type these helpers implement).
+
+`rxjs` is a regular dependency and is installed automatically. With `@bloqz/core` 3, runs that `restartable()` or `droppable()` cancel get an aborted `context.signal`, and their `update` calls are ignored.
 
 ## Usage
 

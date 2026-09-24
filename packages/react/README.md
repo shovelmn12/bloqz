@@ -27,10 +27,10 @@ This package bridges the gap between your BLoC business logic (managed using `@b
 
 ```bash
 # Using npm
-npm install @bloqz/react
+npm install @bloqz/react @bloqz/core
 
 # Using yarn
-yarn add @bloqz/react
+yarn add @bloqz/react @bloqz/core
 ```
 
 ## Peer Dependencies
@@ -38,8 +38,9 @@ yarn add @bloqz/react
 This package relies on the following peer dependencies, which you need to have installed in your project:
 
 *   `react`: Version 18.0.0 or later (due to `useSyncExternalStore`).
-*   `@bloqz/core`: The core BLoC implementation.
-*   `rxjs`: Required by `@bloqz/core`.
+*   `@bloqz/core`: ^3.0.0, the core BLoC implementation.
+
+`rxjs` and `lodash-es` are regular dependencies and are installed automatically.
 
 ## Core Concepts
 

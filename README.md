@@ -8,7 +8,7 @@
 
 A lightweight, functional implementation of the Bloc pattern for state management in JavaScript and TypeScript applications. Inspired by flutter_bloc, built with TypeScript and RxJS. Designed for predictability, testability, and composability.
 
-This project provides a core engine (`@bloqz/core`), React integration hooks (`@bloqz/react`), and standard concurrency utilities (`@bloqz/concurrency`).
+This project provides a core engine (`@bloqz/core`), React integration hooks (`@bloqz/react`), standard concurrency utilities (`@bloqz/concurrency`), an event bus (`@bloqz/relay`) and its React bindings (`@bloqz/react-relay`). All packages are ESM-only.
 
 ## Core Philosophy
 
@@ -26,7 +26,7 @@ This project provides a core engine (`@bloqz/core`), React integration hooks (`@
 *   **Upfront Handler Definition (`@bloqz/core`):** Event handlers are defined declaratively on Bloc creation.
 *   **Configurable Concurrency (`@bloqz/core`, `@bloqz/concurrency`):** Specify event processing strategies (sequential, concurrent, restartable, droppable) per handler.
 *   **React Integration (`@bloqz/react`):** Unified `useBloc` hook with strategies (`select`, `get`, `observe`) for flexible state consumption.
-*   **Automatic Cleanup (`@bloqz/react`):** `useCreateBloc` handles `bloc.close()` automatically.
+*   **Automatic Cleanup (`@bloqz/react`):** `useCreateBloc` creates the Bloc once and handles `bloc.close()` automatically (StrictMode-safe).
 *   **Concurrent Mode Ready (`@bloqz/react`):** Uses `useSyncExternalStore` for efficient state subscriptions.
 *   **Optimized Re-renders (`@bloqz/react`):** Selectors minimize component updates.
 *   **Event Bus (`@bloqz/relay`):** A lightweight, RxJS-powered event bus.
@@ -40,17 +40,20 @@ This project is organized into the following packages:
 *   **`@bloqz/react`**: Provides React Hooks (`useCreateBloc`, `useBloc`) and utilities for integrating Blocs seamlessly into React applications using Context.
 *   **`@bloqz/concurrency`**: Exports standard `EventTransformer` functions (`sequential`, `concurrent`, `restartable`, `droppable`) for use with `@bloqz/core`.
 *   **`@bloqz/relay`**: A lightweight, RxJS-powered event bus for communication between different parts of an application.
-*   **`@bloqz/react-relay`**: React bindings for `@bloqz/relay`, providing a `RelayProvider` and `useRelay` hook.
+*   **`@bloqz/react-relay`**: React bindings for `@bloqz/relay`, providing a `RelayProvider` and the `useRelay` / `useRelayEvent` hooks.
 
 ## Installation
 
-Install the necessary packages for your setup. Typically, you'll need `@bloqz/core`, `rxjs`, and if using React, also `@bloqz/react`, `react`, and potentially `@bloqz/concurrency`.
+Install the packages for your setup. `rxjs` is a regular dependency of the packages that use it and is installed automatically.
 
 ```bash
 # For a React project
-npm install @bloqz/react
+npm install @bloqz/core @bloqz/react
 # or
-yarn add @bloqz/react
+yarn add @bloqz/core @bloqz/react
+
+# Optional: standard concurrency transformers
+npm install @bloqz/concurrency
 
 # For non-React usage (core only)
 npm install @bloqz/core
@@ -60,8 +63,9 @@ yarn add @bloqz/core
 
 ## Peer Dependencies
 
-*   `@bloqz/react` requires `react` (v18+).
-*   `@bloqz/concurrency` requires `@bloqz/core`.
+*   `@bloqz/react` requires `react` (>= 18) and `@bloqz/core` (^3).
+*   `@bloqz/concurrency` requires `@bloqz/core` (^3).
+*   `@bloqz/react-relay` requires `react` (>= 18) and `@bloqz/relay` (^3).
 
 ## Core Concepts (`@bloqz/core`)
 
@@ -71,15 +75,17 @@ yarn add @bloqz/core
 *   **`CreateBlocProps`:** Configuration object for `createBloc`, includes `initialState`, `handlers`, `onError?`.
 *   **`handlers` Object:** Maps event `type` strings to `EventHandler` definitions (either a function or an object `{ handler, transformer? }`).
 *   **`EventHandler`:** The logic to run for an event. Receives `event` and `BlocContext`.
-*   **`BlocContext`:** Provides `value` (current state snapshot) and `update` (function to change state) to handlers.
+*   **`BlocContext`:** Provides `id`, `value` (a frozen state snapshot taken when the handler starts), `update` (function to change state) and `signal` (an `AbortSignal` that aborts when the run is cancelled or the Bloc closes; a cancelled run's `update` is a no-op) to handlers.
+*   **`createPipeBloc`:** Wraps an external `source$` Observable as a read-only Bloc (`add` is a no-op).
+*   **`State<T, E, P = T | undefined>`:** A RemoteData-style async state union (`init` / `loading` / `data` / `error`). `P` is how the previous value is represented in `loading` and `error`.
 *   **`EventTransformer`:** Controls concurrency (how handlers for the same event type run relative to each other).
 
 ## React Integration (`@bloqz/react`)
 
-*   **`React.createContext`:** Use React's standard function to create a typed context (`Context<Bloc | null>`).
-*   **`useCreateBloc`:** Hook to create a stable, auto-closing Bloc instance within a component (ideal for providers).
+*   **`createBlocContext` / `React.createContext`:** Create a typed context. `Context<Bloc>`, `Context<Bloc | undefined>` and `Context<Bloc | null>` are all accepted.
+*   **`useCreateBloc`:** Hook to create a stable, auto-closing Bloc instance within a component (ideal for providers). Props are read only on creation. Pass an optional `deps` list to recreate the Bloc when it changes.
 *   **`Context.Provider`:** Standard React provider to pass the stable Bloc instance down the tree.
-*   **`useBloc`:** Universal hook to access the Bloc instance, state, or streams from context using strategies (`select`, `get`, `observe`).
+*   **`useBloc`:** Universal hook to access the Bloc instance, state, or streams from context using strategies (`select`, `get`, `observe`, `add`, `close`). Strategies are plain factory functions, not hooks, and can be created at module scope.
 
 ## Concurrency (`@bloqz/concurrency`)
 
@@ -176,17 +182,25 @@ function App() {
 #### `createBloc<Event, State>(props: CreateBlocProps<Event, State>): Bloc<Event, State>`
 
 *   Creates a Bloc instance.
+*   `props.id?`: Optional ID (defaults to a generated UUID).
 *   `props.initialState`: The starting state.
 *   `props.handlers`: Object mapping event type strings to handler definitions (function or `{ handler, transformer? }`).
 *   `props.onError?`: Optional global error handler for handler exceptions.
 
+#### `createPipeBloc<Event, State>(props: CreatePipeBlocProps<State>): Bloc<Event, State>`
+
+*   Creates a read-only Bloc from `props.source$`. `props.initialState` is optional; without it, `state` is `undefined` until the source emits.
+*   Closes when the source completes or errors. Source errors are emitted on `errors$` with `event: undefined`.
+
 #### `Bloc<Event, State>` Interface
 
+*   `id: string`: The Bloc ID.
 *   `state$: Observable<State>`: Stream of state changes.
 *   `state: State`: Synchronous getter for current state.
-*   `errors$: Observable<{ event: Event; error: unknown }>`: Stream of handler errors.
+*   `errors$: Observable<{ event: Event | undefined; error: unknown }>`: Stream of errors (`event` is `undefined` when the error is not tied to an event).
 *   `add(event: Event): void`: Dispatches an event.
-*   `close(): void`: Cleans up resources. **Must be called.**
+*   `close(): void`: Cleans up resources and aborts running handlers. **Must be called.**
+*   `isClosed: boolean`: Whether the Bloc has been closed.
 
 #### Key Core Types
 
@@ -195,17 +209,19 @@ function App() {
 *   `EventHandler`: Union type (`EventHandlerFunction` | `EventHandlerObject`).
 *   `EventHandlerFunction`: Signature `(event, context) => void | Promise<void>`.
 *   `EventHandlerObject`: `{ handler: EventHandlerFunction, transformer?: EventTransformer }`.
-*   `ErrorHandler`: Signature `(error, event) => void`.
-*   `BlocContext`: `{ value: State, update: (newState | fn) => void }` passed to handlers.
+*   `ErrorHandler`: Signature `(error: unknown, event: Event | undefined) => void`.
+*   `BlocContext`: `{ id, value: State, update: (newState | fn) => void, signal: AbortSignal }` passed to handlers.
 *   `EventTransformer`: `(project) => OperatorFunction` for concurrency.
-*   `EventTypeIdentifier`: Internal type (primarily string for this API).
+*   `State<T, E, P = T | undefined>` plus `InitState`, `LoadingState`, `DataState`, `ErrorState`: Async state union and its members.
+*   `EventTypeOf`, `ExtractEventByType`: Utility types for event unions.
 
 ### `@bloqz/react`
 
-#### `useCreateBloc<Event, State>(props): Bloc<Event, State>`
+#### `useCreateBloc<Event, State>(props, deps?): Bloc<Event, State>`
 
-*   Creates a memoized Bloc instance using `@bloqz/core`'s `createBloc`.
-*   Automatically calls `bloc.close()` on unmount.
+*   Creates a Bloc once per component with `createBloc` (or `createPipeBloc` when `props` has a `source$`). Props are only read on creation.
+*   `deps` (optional): when an entry changes, the current Bloc is closed and a new one is created.
+*   Automatically calls `bloc.close()` on unmount. StrictMode-safe.
 *   Ideal for use in Context Providers.
 
 #### `useBloc<Event, State, T>(context, strategy?): T | Bloc`
@@ -214,6 +230,8 @@ function App() {
 *   **`select(selector)`:** Subscribes to state and returns a specific slice. Re-renders only when selected value changes.
 *   **`get(selector)`:** Returns a static value or method from the Bloc without subscribing.
 *   **`observe(selector)`:** Transforms and returns the state observable without subscribing.
+*   **`add()` / `close()`:** Return the Bloc's `add` / `close` methods.
+*   Throws when the context holds no Bloc (`null` / `undefined`).
 
 ### `@bloqz/concurrency`
 
@@ -224,9 +242,36 @@ Exports standard `EventTransformer` functions:
 *   `restartable<Event>()`: Processes the latest event, cancels previous (uses `switchMap`).
 *   `droppable<Event>()`: Ignores new events if one is running (uses `exhaustMap`).
 
+Runs cancelled by a transformer (e.g. superseded under `restartable()`) have their `context.signal` aborted and cannot update state.
+
+### `@bloqz/relay`
+
+*   `createRelay<Events>(options?)`: Creates an event bus. `emit(topic, event)`, `on(topic, handler)` / `on('*', (topic, event) => ...)` (both return an unsubscribe function), `dispose()` and `isDisposed`.
+*   `options.onError`: Receives errors thrown by subscribers. Other subscribers still get the event.
+*   After `dispose()`, `emit` and `on` warn and do nothing.
+
+### `@bloqz/react-relay`
+
+*   `RelayProvider`: Creates a relay once per mount (via the optional `create` prop) and disposes it on unmount.
+*   `useRelay()`: Returns the relay. Throws when there is no `RelayProvider` ancestor.
+*   `useRelayEvent(topic, handler)`: Subscribes for the component's lifetime, always calling the latest handler.
+
 ## Contributing
 
 Contributions are welcome! Please follow standard practices like opening issues for discussion before submitting pull requests.
+
+This is a pnpm workspace (`packages/*`). From the repo root:
+
+```bash
+pnpm install
+pnpm -r build       # build every package (dependency order)
+pnpm typecheck      # type-check src + tests of every package (needs a prior build)
+pnpm -r test        # run all tests
+pnpm lint:pkg       # publint + are-the-types-wrong on every package
+pnpm changeset      # describe your change for the next release
+```
+
+CI (`.github/workflows/ci.yml`) runs the same steps on every pull request and on pushes to `main`.
 
 ## License
 

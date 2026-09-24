@@ -10,13 +10,11 @@ The `@bloqz/relay` package provides a lightweight, RxJS-powered event bus for en
 
 ## Installation
 
-This package is part of the Bloqz monorepo. To use it, add it as a dependency in your `package.json`:
-
-```json
-"dependencies": {
-  "@bloqz/relay": "2.0.2"
-}
+```bash
+npm install @bloqz/relay
 ```
+
+`rxjs` is a regular dependency and is installed automatically. The package is ESM-only.
 
 ## Usage
 
@@ -58,7 +56,7 @@ You can emit an event to a specific topic using the `emit` method.
 
 ```typescript
 appRelay.emit('user', { type: 'login', userId: '123' });
-appRelay.emit('notifications', { type: 'new', message: 'Welcome!' });
+appRelay.emit('cart', { type: 'add', productId: 'p-1' });
 ```
 
 ### Listening for Events

@@ -5,8 +5,10 @@ React bindings for [@bloqz/relay](https://github.com/shovelmn12/bloqz/tree/main/
 ## Installation
 
 ```sh
-npm install @bloqz/react-relay @bloqz/relay rxjs
+npm install @bloqz/react-relay @bloqz/relay
 ```
+
+Peer dependencies: `react` >= 18 and `@bloqz/relay` ^3.0.0. This package re-exports everything from `@bloqz/relay`.
 
 ## Usage
 
