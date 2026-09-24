@@ -23,10 +23,6 @@ import {
 } from "../models/index.js";
 import { generateShortID } from "./id.js";
 
-// Assuming defaultTransformer and other required functions/types are defined or imported
-// e.g., sequential, concurrent, restartable, droppable if used in examples/defaults
-// Helper types assumed to be defined: EventTypeOf, ExtractEventByType
-
 /**
  * Provides the default event transformer if none is specified.
  * Default is concurrent processing.
@@ -137,7 +133,7 @@ function createHandlerConfigEntry<State>(
  * @template State The type representing the state managed by this Bloc.
  * @param {CreateBlocProps<Event, State>} props An object containing the configuration properties
  *   for the Bloc: `initialState`, `handlers` object, and optional `onError`.
- * @returns {Bloc<Event, State>} A Bloc instance adhering to the public API (without the `on` method).
+ * @returns {Bloc<Event, State>} A Bloc instance adhering to the public `Bloc` API.
  * @example
  * const counterBloc = createBloc({
  *   initialState: { count: 0, status: 'idle' },
@@ -391,7 +387,7 @@ export function createBloc<Event extends { type: string }, State>(
     // console.log("Bloc: Closed."); // Optional logging
   };
 
-  // --- Create the Public API Object (without `on`) ---
+  // --- Create the Public API Object ---
   /** @internal The public Bloc instance. */
   const bloc: Bloc<Event, State> = {
     id: props.id ?? generateShortID(),

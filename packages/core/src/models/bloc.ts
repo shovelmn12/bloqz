@@ -1,10 +1,9 @@
 import { Observable, EMPTY as EMPTY_STREAM } from "../utils/stream.js";
 
 /**
- * The public interface for a Bloc instance created by `createBloc`.
- * This version assumes event handlers are defined upfront during creation
- * (e.g., via a `handlers` object or map) and does not include an `on` method
- * for registering handlers after instantiation.
+ * The public interface for a Bloc instance created by `createBloc` or
+ * `createPipeBloc`. Event handlers are defined upfront during creation via
+ * the `handlers` object; there is no API for registering handlers later.
  *
  * It provides access to the current state, a stream of state changes,
  * a method to dispatch events, a stream for errors, and a cleanup method.
@@ -94,17 +93,21 @@ export interface Bloc<Event, State> {
 
 /**
  * A constant `Bloc` instance that serves as a "no-op" or null object.
- * It provides empty streams and dummy methods that do nothing.
+ * It provides empty (immediately completing) streams and dummy methods that
+ * do nothing, and reports itself as closed.
  * This is useful for initializing variables to a safe, non-null value
  * or as a placeholder when a Bloc is not yet available, preventing
  * runtime errors.
+ *
+ * Its shape is checked against `Bloc<never, unknown>`; its inferred type is
+ * kept so it remains assignable to typed `Bloc` variables as a placeholder.
  */
 export const EMPTY = {
   id: "EMPTY",
   state$: EMPTY_STREAM,
   state: {},
   errors$: EMPTY_STREAM,
-  add: () => {},
-  close: () => {},
-  isClosed: false,
-};
+  add: (_event?: unknown): void => {},
+  close: (): void => {},
+  isClosed: true as boolean,
+} satisfies Bloc<never, unknown>;
