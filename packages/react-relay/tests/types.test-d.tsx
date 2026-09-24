@@ -6,6 +6,7 @@ import {
   RelayProvider,
   RelayProviderProps,
   useRelay,
+  useRelayEvent,
 } from "../src/index.js";
 
 type UserEvent = { type: "login"; userId: string } | { type: "logout" };
@@ -47,5 +48,27 @@ describe("react-relay types", () => {
     expectTypeOf<RelayProviderProps<AppEvents>["create"]>().toEqualTypeOf<
       (() => Relay<AppEvents>) | undefined
     >();
+  });
+
+  it("useRelayEvent types handlers by topic", () => {
+    useRelayEvent("*", (topic, event) => {
+      expectTypeOf(topic).toEqualTypeOf<string>();
+      expectTypeOf(event).toEqualTypeOf<RelayEvent>();
+    });
+
+    useRelayEvent<AppEvents, "user">("user", (event) => {
+      expectTypeOf(event).toEqualTypeOf<UserEvent>();
+    });
+
+    useRelayEvent("anything", (event) => {
+      expectTypeOf(event).toEqualTypeOf<RelayEvent>();
+    });
+
+    // @ts-expect-error unknown topic for a typed map
+    useRelayEvent<AppEvents, "nope">("nope", () => {});
+
+    const eventOnly = (event: RelayEvent) => void event;
+    // @ts-expect-error '*' handlers receive (topic, event)
+    useRelayEvent("*", eventOnly);
   });
 });
