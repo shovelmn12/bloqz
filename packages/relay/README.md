@@ -10,13 +10,11 @@ The `@bloqz/relay` package provides a lightweight, RxJS-powered event bus for en
 
 ## Installation
 
-This package is part of the Bloqz monorepo. To use it, add it as a dependency in your `package.json`:
-
-```json
-"dependencies": {
-  "@bloqz/relay": "2.0.2"
-}
+```bash
+npm install @bloqz/relay
 ```
+
+`rxjs` is a regular dependency and is installed automatically. The package is ESM-only.
 
 ## Usage
 
@@ -33,12 +31,12 @@ const appRelay = createRelay();
 
 ### Type Safety
 
-You can define the events available in your relay to get full TypeScript support.
+You can define the events available in your relay to get full TypeScript support. Any type or interface whose values are events (objects with a `type` string) works as an event map; it does not need an index signature.
 
 ```typescript
-import { createRelay, RelayEventsMap } from '@bloqz/relay';
+import { createRelay } from '@bloqz/relay';
 
-interface AppEvents extends RelayEventsMap {
+interface AppEvents {
   user: { type: 'login'; userId: string } | { type: 'logout' };
   cart: { type: 'add'; productId: string };
 }
@@ -47,6 +45,9 @@ const appRelay = createRelay<AppEvents>();
 
 // Types are checked here!
 appRelay.emit('user', { type: 'login', userId: '123' });
+
+appRelay.on('user', (event) => {}); // event: AppEvents['user']
+appRelay.on('*', (topic, event) => {}); // topic: string, event: RelayEvent
 ```
 
 ### Emitting Events
@@ -55,7 +56,7 @@ You can emit an event to a specific topic using the `emit` method.
 
 ```typescript
 appRelay.emit('user', { type: 'login', userId: '123' });
-appRelay.emit('notifications', { type: 'new', message: 'Welcome!' });
+appRelay.emit('cart', { type: 'add', productId: 'p-1' });
 ```
 
 ### Listening for Events
@@ -85,10 +86,25 @@ const unsubscribe = appRelay.on('*', (topic, event) => {
 });
 ```
 
+### Error Handling
+
+Events are delivered synchronously, in subscription order. If a subscriber throws, the error is caught: the remaining subscribers still receive the event and `emit` does not throw. Errors are passed to the optional `onError` callback, or logged with `console.error` if none is given.
+
+```typescript
+const appRelay = createRelay<AppEvents>({
+  onError: (error, { topic, event }) => {
+    reportToMonitoring(error, { topic, event });
+  },
+});
+```
+
 ### Disposing the Relay
 
-When a relay is no longer needed, you can dispose of it to complete the underlying event stream and unsubscribe all listeners.
+When a relay is no longer needed, you can dispose of it to complete the underlying event stream and unsubscribe all listeners. `dispose()` is idempotent.
+
+After disposal, `emit` and `on` log a warning and do nothing; `on` returns a no-op unsubscribe function. Check `isDisposed` to find out whether a relay has been disposed.
 
 ```typescript
 appRelay.dispose();
+appRelay.isDisposed; // true
 ```

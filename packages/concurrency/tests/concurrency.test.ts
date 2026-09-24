@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { Subject, firstValueFrom, lastValueFrom, of, timer } from "rxjs";
-import { map, scan, toArray, withLatestFrom } from "rxjs/operators";
+import { Subject, firstValueFrom, lastValueFrom, timer } from "rxjs";
+import { map, scan, toArray } from "rxjs/operators";
 import { concurrent } from "../src/utils/concurrent.js";
 import { droppable } from "../src/utils/droppable.js";
 import { restartable } from "../src/utils/restartable.js";
@@ -9,17 +9,17 @@ import { sequential } from "../src/utils/sequential.js";
 const ASYNC_DELAY = 10;
 
 // Helper function to simulate an async operation with a delay
-const delayed = (value, delay = ASYNC_DELAY) =>
+const delayed = <T>(value: T, delay = ASYNC_DELAY) =>
   timer(delay).pipe(map(() => value));
 
 describe("Concurrency Operators", () => {
   describe("concurrent", () => {
     it("should process all events in parallel", async () => {
       const source$ = new Subject<number>();
-      const project = (value) => delayed(`processed:${value}`);
+      const project = (value: number) => delayed(`processed:${value}`);
 
       const resultsPromise = firstValueFrom(
-        source$.pipe(concurrent()(project), toArray())
+        source$.pipe(concurrent<number>()(project), toArray())
       );
       source$.next(1);
       source$.next(2);
@@ -40,12 +40,12 @@ describe("Concurrency Operators", () => {
   describe("droppable", () => {
     it("should drop subsequent events while one is in progress", async () => {
       const source$ = new Subject<number>();
-      const project = (value) => delayed(`processed:${value}`, ASYNC_DELAY * 2);
+      const project = (value: number) => delayed(`processed:${value}`, ASYNC_DELAY * 2);
 
       const resultsPromise = lastValueFrom(
         source$.pipe(
-          droppable()(project),
-          scan((acc, val) => [...acc, val], [])
+          droppable<number>()(project),
+          scan<unknown, unknown[]>((acc, val) => [...acc, val], [])
         )
       );
 
@@ -64,10 +64,10 @@ describe("Concurrency Operators", () => {
   describe("restartable", () => {
     it("should cancel in-progress events when a new one arrives", async () => {
       const source$ = new Subject<number>();
-      const project = (value) => delayed(`processed:${value}`);
+      const project = (value: number) => delayed(`processed:${value}`);
 
       const resultsPromise = firstValueFrom(
-        source$.pipe(restartable()(project), toArray())
+        source$.pipe(restartable<number>()(project), toArray())
       );
 
       source$.next(1);
@@ -83,12 +83,12 @@ describe("Concurrency Operators", () => {
   describe("sequential", () => {
     it("should process events one after another in strict order", async () => {
       const source$ = new Subject<number>();
-      const project = (value) => delayed(`processed:${value}`);
-      const order = [];
+      const project = (value: number) => delayed(`processed:${value}`);
+      const order: string[] = [];
 
       const resultsPromise = firstValueFrom(
         source$.pipe(
-          sequential()((val) => {
+          sequential<number>()((val) => {
             order.push(`start:${val}`);
             return project(val).pipe(
               map((res) => {

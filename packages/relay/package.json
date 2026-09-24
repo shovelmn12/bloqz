@@ -1,6 +1,6 @@
 {
   "name": "@bloqz/relay",
-  "version": "2.0.4",
+  "version": "3.0.0",
   "description": "A package for enabling inter-bloc communication using an event relay system.",
   "keywords": [
     "bloc",
@@ -24,14 +24,23 @@
   "license": "MIT",
   "author": "Shovel Maman",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    "main": "./dist/index.js",
-    "import": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
   ],
+  "sideEffects": false,
   "publishConfig": {
     "access": "public"
   },
@@ -39,14 +48,12 @@
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.test.json",
     "prepublishOnly": "npm run build",
     "test": "vitest --run"
   },
   "dependencies": {
     "rxjs": "^7.8.2"
-  },
-  "peerDependencies": {
-    "@bloqz/core": "workspace:^"
   },
   "devDependencies": {}
 }
