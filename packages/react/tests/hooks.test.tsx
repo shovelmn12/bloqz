@@ -2,6 +2,7 @@ import React, { FC, PropsWithChildren, createContext } from "react";
 import { describe, it, expect, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { createBloc, Bloc, CreateBlocProps } from "@bloqz/core";
+import { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 
 import { useCreateBloc, useBloc, select, get, observe, add, close } from "../src/index.js";
@@ -16,7 +17,7 @@ interface CounterState {
 type CounterEvent = { type: "INCREMENT" } | { type: "DECREMENT" } | { type: "SET_NAME", name: string };
 
 const createCounterBloc = (
-  props: CreateBlocProps<CounterEvent, CounterState>
+  props: Omit<CreateBlocProps<CounterEvent, CounterState>, "handlers">
 ) => {
   return createBloc<CounterEvent, CounterState>({
     ...props,
@@ -25,9 +26,7 @@ const createCounterBloc = (
         update((s) => ({ ...s, count: s.count + 1 })),
       DECREMENT: (_, { update }) =>
         update((s) => ({ ...s, count: s.count - 1 })),
-      // @ts-ignore
       SET_NAME: (event, { update }) => update((s) => ({ ...s, name: event.name })),
-      ...props.handlers,
     },
   });
 };
@@ -39,7 +38,6 @@ const BlocContext = createContext<Bloc<CounterEvent, CounterState> | null>(
 const wrapper: FC<
   PropsWithChildren<{ bloc: Bloc<CounterEvent, CounterState> }>
 > = ({ children, bloc }) => (
-  // @ts-ignore
   <BlocContext.Provider value={bloc}>{children}</BlocContext.Provider>
 );
 
@@ -69,7 +67,7 @@ describe("React Hooks", () => {
   describe("useBloc (Default)", () => {
     it("should return the bloc from context", () => {
       const bloc = createCounterBloc({ initialState: { count: 1, name: "" } });
-      const { result } = renderHook(() => useBloc(BlocContext as any), {
+      const { result } = renderHook(() => useBloc(BlocContext), {
         wrapper: (props) => wrapper({ ...props, bloc }),
       });
 
@@ -79,7 +77,7 @@ describe("React Hooks", () => {
 
     it("should throw if used outside a provider", () => {
       const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      expect(() => renderHook(() => useBloc(BlocContext as any))).toThrow(
+      expect(() => renderHook(() => useBloc(BlocContext))).toThrow(
         "useBloc must be used within a BlocContext.Provider"
       );
       errSpy.mockRestore();
@@ -90,7 +88,7 @@ describe("React Hooks", () => {
     it("should return the selected state and re-render on change", async () => {
       const bloc = createCounterBloc({ initialState: { count: 5, name: "" } });
       const { result } = renderHook(
-        () => useBloc(BlocContext as any, select((s: CounterState) => s.count)),
+        () => useBloc(BlocContext, select((s: CounterState) => s.count)),
         {
           wrapper: (props) => wrapper({ ...props, bloc }),
         }
@@ -113,7 +111,7 @@ describe("React Hooks", () => {
       const selectCount = (s: CounterState) => s.count;
       const bloc = createCounterBloc({ initialState: { count: 0, name: "" } });
       const { result } = renderHook(
-        () => useBloc(BlocContext as any, select(selectCount)),
+        () => useBloc(BlocContext, select(selectCount)),
         {
           wrapper: (props) => wrapper({ ...props, bloc }),
         }
@@ -140,8 +138,7 @@ describe("React Hooks", () => {
       const { result } = renderHook(
         () =>
           useBloc(
-            BlocContext as any,
-            // @ts-ignore
+            BlocContext,
             select((state: CounterState) => state.name)
           ),
         {
@@ -166,7 +163,7 @@ describe("React Hooks", () => {
 
       const { result, rerender } = renderHook(
         ({ propName }) => useBloc(
-            BlocContext as any,
+            BlocContext,
             select((s: CounterState) => s.name === propName)
         ),
         {
@@ -180,7 +177,6 @@ describe("React Hooks", () => {
 
       // Change state to "B"
       act(() => {
-        // @ts-ignore
         bloc.add({ type: "SET_NAME", name: "B" });
       });
       await waitFor(() => expect(result.current).toBe(false));
@@ -198,7 +194,7 @@ describe("React Hooks", () => {
     it("should return a static value from the bloc", async () => {
       const bloc = createCounterBloc({ initialState: { count: 10, name: "" } });
       const { result } = renderHook(
-        () => useBloc(BlocContext as any, get((b: Bloc<any, any>) => b.state.count)),
+        () => useBloc(BlocContext, get((b: Bloc<any, any>) => b.state.count)),
         {
           wrapper: (props) => wrapper({ ...props, bloc }),
         }
@@ -223,7 +219,7 @@ describe("React Hooks", () => {
     it("should return a method reference", () => {
         const bloc = createCounterBloc({ initialState: { count: 0, name: "" } });
         const { result } = renderHook(
-          () => useBloc(BlocContext as any, get((b: Bloc<any, any>) => b.add)),
+          () => useBloc(BlocContext, get((b: Bloc<any, any>) => b.add)),
           {
             wrapper: (props) => wrapper({ ...props, bloc }),
           }
@@ -240,7 +236,7 @@ describe("React Hooks", () => {
     it("should return the add method via add()", async () => {
       const bloc = createCounterBloc({ initialState: { count: 0, name: "" } });
       const { result } = renderHook(
-        () => useBloc(BlocContext as any, add()),
+        () => useBloc(BlocContext, add()),
         {
           wrapper: (props) => wrapper({ ...props, bloc }),
         }
@@ -264,7 +260,7 @@ describe("React Hooks", () => {
     it("should return the close method via close()", () => {
       const bloc = createCounterBloc({ initialState: { count: 0, name: "" } });
       const { result } = renderHook(
-        () => useBloc(BlocContext as any, close()),
+        () => useBloc(BlocContext, close()),
         {
           wrapper: (props) => wrapper({ ...props, bloc }),
         }
@@ -285,7 +281,7 @@ describe("React Hooks", () => {
     it("should return an observable", async () => {
       const bloc = createCounterBloc({ initialState: { count: 100, name: "" } });
       const { result } = renderHook(
-        () => useBloc(BlocContext as any, observe(($) => $.pipe(map((s: CounterState) => s.count)))),
+        () => useBloc(BlocContext, observe(($: Observable<CounterState>) => $.pipe(map((s) => s.count)))),
         {
           wrapper: (props) => wrapper({ ...props, bloc }),
         }

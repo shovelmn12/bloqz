@@ -29,7 +29,7 @@ type CounterEvent =
 
 const createCounterBloc = (
   initialState: CounterState,
-  onError?: (error: unknown, event: CounterEvent) => void
+  onError?: (error: unknown, event: CounterEvent | undefined) => void
 ): Bloc<CounterEvent, CounterState> => {
   return createBloc<CounterEvent, CounterState>({
     initialState,

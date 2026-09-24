@@ -130,17 +130,22 @@ export type EventTypeIdentifier<BaseEvent, Event extends BaseEvent> =
 
 /**
  * Defines the signature for a callback function that can be provided to `createBloc`
- * to globally handle errors that occur *within* any registered `EventHandler`.
- * This is useful for centralized error logging or reporting.
+ * to globally handle errors.
  *
- * Note: This handles errors *from* event handlers, not errors in the event stream
- * pipeline itself (which are caught separately).
+ * It is invoked for:
+ * - errors thrown (or rejected) *within* a registered `EventHandler` — `event`
+ *   is the event that was being processed;
+ * - unrecoverable errors in the event processing pipeline itself (e.g. a
+ *   broken custom transformer) — `event` is `undefined`, and the Bloc closes.
  *
  * @template Event The event union type for the Bloc.
  */
 export type ErrorHandler<Event> = (
-  /** The error that was thrown or rejected within the EventHandler. */
+  /** The error that was thrown or rejected. */
   error: unknown,
-  /** The specific event instance that was being processed when the error occurred. */
-  event: Event
+  /**
+   * The event being processed when the error occurred, or `undefined` for
+   * pipeline-level errors that are not tied to a specific event.
+   */
+  event: Event | undefined
 ) => void;
