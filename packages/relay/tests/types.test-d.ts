@@ -105,4 +105,15 @@ describe("Relay types", () => {
     });
     relay.emit("anything", { type: "x" });
   });
+
+  it("accepts an onError option", () => {
+    const relay = createRelay<AppEventsType>({
+      onError: (error, context) => {
+        expectTypeOf(error).toEqualTypeOf<unknown>();
+        expectTypeOf(context.topic).toEqualTypeOf<string>();
+        expectTypeOf(context.event).toEqualTypeOf<RelayEvent>();
+      },
+    });
+    expectTypeOf(relay.emit).toBeFunction();
+  });
 });

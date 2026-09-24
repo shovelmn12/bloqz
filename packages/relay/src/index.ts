@@ -5,6 +5,8 @@ export type {
   RelayHandler,
   RelayTopicHandler,
   RelayPredicate,
+  RelayErrorContext,
+  RelayOptions,
   Relay,
 } from "./models.js";
 export { createRelay } from "./create.js";

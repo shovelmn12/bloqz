@@ -88,6 +88,18 @@ const unsubscribe = appRelay.on('*', (topic, event) => {
 });
 ```
 
+### Error Handling
+
+Events are delivered synchronously, in subscription order. If a subscriber throws, the error is caught: the remaining subscribers still receive the event and `emit` does not throw. Errors are passed to the optional `onError` callback, or logged with `console.error` if none is given.
+
+```typescript
+const appRelay = createRelay<AppEvents>({
+  onError: (error, { topic, event }) => {
+    reportToMonitoring(error, { topic, event });
+  },
+});
+```
+
 ### Disposing the Relay
 
 When a relay is no longer needed, you can dispose of it to complete the underlying event stream and unsubscribe all listeners.

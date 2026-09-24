@@ -62,6 +62,29 @@ export type RelayHandler<E> = (event: E) => void;
 export type RelayPredicate<T, E> = (topic: T, event: E) => boolean;
 
 /**
+ * Context passed to {@link RelayOptions.onError} describing the emission during
+ * which a subscriber threw.
+ */
+export interface RelayErrorContext {
+  /** The topic the event was emitted on. */
+  readonly topic: string;
+  /** The event payload that was being delivered. */
+  readonly event: RelayEvent;
+}
+
+/**
+ * Options for {@link createRelay}.
+ */
+export interface RelayOptions {
+  /**
+   * Called when a subscriber throws while handling an event. Errors never
+   * propagate out of `emit` and never stop delivery to other subscribers.
+   * Defaults to logging via `console.error`.
+   */
+  readonly onError?: (error: unknown, context: RelayErrorContext) => void;
+}
+
+/**
  * An RxJS-powered event bus with topic-based subscriptions and a `'*'`
  * wildcard subscription. It serves as a central hub for cross-cutting
  * communication, such as between Blocs.
