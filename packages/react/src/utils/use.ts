@@ -20,6 +20,20 @@ import { isEqual } from "lodash-es";
 const noop = () => {};
 
 /**
+ * Any React Context that can carry a Bloc: the plain `Context<Bloc<E, S>>`,
+ * or the more common nullable forms `Context<Bloc<E, S> | undefined>`,
+ * `Context<Bloc<E, S> | null>` and `Context<Bloc<E, S> | null | undefined>`.
+ *
+ * `useBloc` throws if the context value is `null`/`undefined` at runtime
+ * (i.e. no Provider is mounted above the component).
+ */
+export type BlocReactContext<Event, State> =
+  | Context<Bloc<Event, State>>
+  | Context<Bloc<Event, State> | undefined>
+  | Context<Bloc<Event, State> | null>
+  | Context<Bloc<Event, State> | null | undefined>;
+
+/**
  * A versatile React Hook for consuming a Bloc from Context.
  * It supports retrieving the full Bloc, selecting reactive state, accessing static members,
  * or transforming the state stream using strategy helpers.
@@ -33,42 +47,42 @@ const noop = () => {};
 
 // Overload 1: Default (Return Bloc)
 export function useBloc<Event, State>(
-  context: Context<Bloc<Event, State>>
+  context: BlocReactContext<Event, State>
 ): Bloc<Event, State>;
 
 // Overload 2: Reactive State Selection
 export function useBloc<Event, State, T>(
-  context: Context<Bloc<Event, State>>,
+  context: BlocReactContext<Event, State>,
   strategy: SelectStrategy<State, T>
 ): T;
 
 // Overload 3: Static Access
 export function useBloc<Event, State, T>(
-  context: Context<Bloc<Event, State>>,
+  context: BlocReactContext<Event, State>,
   strategy: GetStrategy<Event, State, T>
 ): T;
 
 // Overload 4: Stream Transformation
 export function useBloc<Event, State, T>(
-  context: Context<Bloc<Event, State>>,
+  context: BlocReactContext<Event, State>,
   strategy: ObserveStrategy<State, T>
 ): Observable<T>;
 
 // Overload 5: Add Method
 export function useBloc<Event, State>(
-  context: Context<Bloc<Event, State>>,
+  context: BlocReactContext<Event, State>,
   strategy: AddStrategy
 ): (event: Event) => void;
 
 // Overload 6: Close Method
 export function useBloc<Event, State>(
-  context: Context<Bloc<Event, State>>,
+  context: BlocReactContext<Event, State>,
   strategy: CloseStrategy
 ): () => void;
 
 // Implementation
 export function useBloc<Event, State, T>(
-  context: Context<Bloc<Event, State>>,
+  context: BlocReactContext<Event, State>,
   strategy?:
     | SelectStrategy<State, T>
     | GetStrategy<Event, State, T>
@@ -81,7 +95,9 @@ export function useBloc<Event, State, T>(
   | Bloc<Event, State>
   | ((event: Event) => void)
   | (() => void) {
-  const bloc = useContext(context);
+  const bloc = useContext(
+    context as Context<Bloc<Event, State> | null | undefined>
+  );
 
   if (!bloc) {
     throw new Error("useBloc must be used within a BlocContext.Provider");
