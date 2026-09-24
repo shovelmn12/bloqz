@@ -33,12 +33,12 @@ const appRelay = createRelay();
 
 ### Type Safety
 
-You can define the events available in your relay to get full TypeScript support.
+You can define the events available in your relay to get full TypeScript support. Any type or interface whose values are events (objects with a `type` string) works as an event map; it does not need an index signature.
 
 ```typescript
-import { createRelay, RelayEventsMap } from '@bloqz/relay';
+import { createRelay } from '@bloqz/relay';
 
-interface AppEvents extends RelayEventsMap {
+interface AppEvents {
   user: { type: 'login'; userId: string } | { type: 'logout' };
   cart: { type: 'add'; productId: string };
 }
@@ -47,6 +47,9 @@ const appRelay = createRelay<AppEvents>();
 
 // Types are checked here!
 appRelay.emit('user', { type: 'login', userId: '123' });
+
+appRelay.on('user', (event) => {}); // event: AppEvents['user']
+appRelay.on('*', (topic, event) => {}); // topic: string, event: RelayEvent
 ```
 
 ### Emitting Events
