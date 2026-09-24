@@ -1,7 +1,12 @@
 import { describe, expectTypeOf, it } from "vitest";
+import React from "react";
 import { createRelay, Relay, RelayEvent } from "@bloqz/relay";
 
-import { useRelay } from "../src/index.js";
+import {
+  RelayProvider,
+  RelayProviderProps,
+  useRelay,
+} from "../src/index.js";
 
 type UserEvent = { type: "login"; userId: string } | { type: "logout" };
 type CartEvent = { type: "add"; itemId: string };
@@ -29,5 +34,18 @@ describe("react-relay types", () => {
 
   it("useRelay defaults to the untyped map", () => {
     expectTypeOf(useRelay()).toEqualTypeOf<Relay>();
+  });
+
+  it("RelayProvider accepts a typed create", () => {
+    const element = (
+      <RelayProvider<AppEvents> create={() => createRelay<AppEvents>()}>
+        {null}
+      </RelayProvider>
+    );
+    expectTypeOf(element).toEqualTypeOf<React.JSX.Element>();
+
+    expectTypeOf<RelayProviderProps<AppEvents>["create"]>().toEqualTypeOf<
+      (() => Relay<AppEvents>) | undefined
+    >();
   });
 });
