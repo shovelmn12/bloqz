@@ -102,8 +102,11 @@ const appRelay = createRelay<AppEvents>({
 
 ### Disposing the Relay
 
-When a relay is no longer needed, you can dispose of it to complete the underlying event stream and unsubscribe all listeners.
+When a relay is no longer needed, you can dispose of it to complete the underlying event stream and unsubscribe all listeners. `dispose()` is idempotent.
+
+After disposal, `emit` and `on` log a warning and do nothing; `on` returns a no-op unsubscribe function. Check `isDisposed` to find out whether a relay has been disposed.
 
 ```typescript
 appRelay.dispose();
+appRelay.isDisposed; // true
 ```

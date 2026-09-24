@@ -38,6 +38,7 @@ export function createRelay<
 
   // The single, central stream for all events.
   const eventStream$ = new Subject<Envelope>();
+  let disposed = false;
 
   const reportError = (error: unknown, context: RelayErrorContext) => {
     try {
@@ -52,6 +53,13 @@ export function createRelay<
     topicOrPattern: PropertyKey,
     callback: (...args: any[]) => void,
   ): (() => void) => {
+    if (disposed) {
+      console.warn(
+        `Relay: Attempted to subscribe to "${String(topicOrPattern)}" after dispose.`,
+      );
+      return () => {};
+    }
+
     const isWildcard = topicOrPattern === "*";
 
     const subscription = eventStream$
@@ -73,10 +81,25 @@ export function createRelay<
 
   return {
     emit(topic, event): void {
+      if (disposed) {
+        console.warn(
+          `Relay: Attempted to emit to "${String(topic)}" after dispose.`,
+        );
+        return;
+      }
+
       eventStream$.next({ topic: topic as string, event });
     },
     on: on as Relay<Events>["on"],
+    get isDisposed(): boolean {
+      return disposed;
+    },
     dispose(): void {
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
       // Complete the subject, which automatically unsubscribes all listeners.
       eventStream$.complete();
     },

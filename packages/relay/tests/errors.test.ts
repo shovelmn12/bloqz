@@ -117,6 +117,71 @@ describe("createRelay error isolation", () => {
   });
 });
 
+describe("createRelay dispose semantics", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("exposes isDisposed", () => {
+    const relay = createRelay();
+    expect(relay.isDisposed).toBe(false);
+    relay.dispose();
+    expect(relay.isDisposed).toBe(true);
+  });
+
+  it("is idempotent", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const relay = createRelay();
+    relay.dispose();
+    expect(() => relay.dispose()).not.toThrow();
+    expect(relay.isDisposed).toBe(true);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("warns once per emit after dispose and delivers nothing", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const relay = createRelay();
+    const handler = vi.fn();
+    relay.on("user", handler);
+    relay.dispose();
+
+    expect(() => relay.emit("user", { type: "x" })).not.toThrow();
+    expect(warn).toHaveBeenCalledTimes(1);
+    relay.emit("user", { type: "x" });
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("warns once per on after dispose and returns a no-op unsubscribe", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const relay = createRelay();
+    relay.dispose();
+
+    const handler = vi.fn();
+    const unsubscribe = relay.on("user", handler);
+    expect(warn).toHaveBeenCalledTimes(1);
+    const unsubscribeAll = relay.on("*", handler);
+    expect(warn).toHaveBeenCalledTimes(2);
+
+    expect(unsubscribe).toBeInstanceOf(Function);
+    expect(() => unsubscribe()).not.toThrow();
+    expect(() => unsubscribeAll()).not.toThrow();
+    expect(warn).toHaveBeenCalledTimes(2);
+
+    relay.emit("user", { type: "x" });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it("allows unsubscribing after dispose without warnings", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const relay = createRelay();
+    const unsubscribe = relay.on("user", vi.fn());
+    relay.dispose();
+    expect(() => unsubscribe()).not.toThrow();
+    expect(warn).not.toHaveBeenCalled();
+  });
+});
+
 describe("createRelay delivery order", () => {
   it("delivers synchronously in subscription order across topic and wildcard listeners", () => {
     const relay = createRelay();

@@ -106,7 +106,7 @@ describe("Relay types", () => {
     relay.emit("anything", { type: "x" });
   });
 
-  it("accepts an onError option", () => {
+  it("exposes isDisposed and accepts an onError option", () => {
     const relay = createRelay<AppEventsType>({
       onError: (error, context) => {
         expectTypeOf(error).toEqualTypeOf<unknown>();
@@ -114,6 +114,6 @@ describe("Relay types", () => {
         expectTypeOf(context.event).toEqualTypeOf<RelayEvent>();
       },
     });
-    expectTypeOf(relay.emit).toBeFunction();
+    expectTypeOf(relay.isDisposed).toEqualTypeOf<boolean>();
   });
 });

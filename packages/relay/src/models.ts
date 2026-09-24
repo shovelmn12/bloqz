@@ -98,6 +98,8 @@ export interface Relay<
    * Emits an event to a specific topic. Every listener on that topic, and every
    * `'*'` listener, is invoked synchronously.
    *
+   * After {@link Relay.dispose}, this logs a warning and does nothing.
+   *
    * @param topic The topic to emit to (e.g., 'user', 'cart').
    * @param event The event payload, which MUST include a `type` property
    * (e.g., `{ type: 'login', userId: '123' }`).
@@ -105,11 +107,16 @@ export interface Relay<
   emit<T extends keyof Events>(topic: T, event: Events[T]): void;
 
   /**
-   * Disposes of the relay, completing its internal event stream and
-   * unsubscribing all listeners. After disposal, the relay can no longer
-   * be used.
+   * Disposes of the relay, unsubscribing all listeners. After disposal,
+   * `emit` and `on` log a warning and do nothing. Calling `dispose` more than
+   * once is safe.
    */
   dispose(): void;
+
+  /**
+   * Whether {@link Relay.dispose} has been called.
+   */
+  readonly isDisposed: boolean;
 
   /**
    * Registers a callback for all events emitted on the relay.
@@ -123,6 +130,9 @@ export interface Relay<
 
   /**
    * Registers a callback for events on a specific topic.
+   *
+   * After {@link Relay.dispose}, this logs a warning, registers nothing and
+   * returns a no-op function.
    *
    * @param topic The topic to listen to.
    * @param callback The callback to execute with the event when one is emitted

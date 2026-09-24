@@ -14,4 +14,5 @@ export const RelayContext = createContext<Relay<any>>({
   emit: () => {},
   on: () => () => {},
   dispose: () => {},
+  isDisposed: false,
 });
