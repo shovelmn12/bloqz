@@ -16,7 +16,6 @@ import {
   EventTransformer,
   EventHandler,
   EventHandlerFunction,
-  EventTypeIdentifier,
   Bloc,
   CreateBlocProps,
   CreatePipeBlocProps,
@@ -40,47 +39,39 @@ function defaultTransformer<Event>(): EventTransformer<Event> {
 // --- Internal Types ---
 
 /**
+ * Group key used for events that have no registered handler. A `Symbol` can
+ * never collide with an event `type` string.
+ * @internal
+ */
+const UNHANDLED = Symbol("bloqz.unhandled");
+
+/**
  * Internal configuration stored within the Bloc's registry for each
  * registered event handler. This structure holds all the necessary pieces
- * to match an incoming event and execute the correct handler with the
- * appropriate concurrency strategy.
+ * to execute the correct handler with the appropriate concurrency strategy.
+ * Handlers are looked up directly by the event's `type` string.
  *
- * @template Event The base event union type for the Bloc.
  * @template State The state type for the Bloc.
  * @internal Should not be used directly by consumers of the library.
  */
-interface HandlerConfig<Event, State> {
+interface HandlerConfig<State> {
   /**
-   * The predicate function used to determine if an incoming event instance
-   * matches the specific event type this configuration is intended for.
-   * This function is derived from the `eventTypeIdentifier` (string literal
-   * or type predicate function) provided during handler registration.
-   *
-   * @param event An incoming event object from the `Event` union.
-   * @returns {boolean} `true` if the event matches, `false` otherwise.
-   */
-  predicate: (event: Event) => boolean;
-
-  /**
-   * The actual event handler function provided by the user via `on` or
-   * the `handlers` object during Bloc creation. This function contains the
-   * core logic to execute when a matching event occurs.
+   * The event handler function provided via the `handlers` object during
+   * Bloc creation. This function contains the core logic to execute when a
+   * matching event occurs.
    *
    * Note: The event payload type is `any` here because this is an internal
-   * representation. The public-facing API (`on` method overloads or the
-   * `handlers` object typing) ensures type safety for the *user-provided*
-   * handler function based on the specific `eventTypeIdentifier`.
+   * representation. The `handlers` object typing (`EventHandlersObject`)
+   * ensures type safety for the *user-provided* handler function.
    */
   handler: EventHandlerFunction<any, State>;
 
   /**
-   * The original identifier (either the event type string literal or the
-   * type predicate function reference) used when this handler was registered.
-   * This is stored primarily for internal purposes like grouping events in
-   * the processing pipeline and potentially for debugging or future features
-   * (e.g., unregistering handlers).
+   * The event `type` string this handler was registered under (the key in
+   * the `handlers` object). Also used as the group key in the processing
+   * pipeline and for error messages.
    */
-  eventTypeIdentifier: EventTypeIdentifier<Event, any>;
+  eventType: string;
 
   /**
    * The event transformer function (e.g., one returned by `sequential()`,
@@ -90,63 +81,43 @@ interface HandlerConfig<Event, State> {
    * other) by applying the appropriate RxJS operator internally.
    *
    * Note: The event type is `any` here internally. Type safety for the
-   * transformer is handled during the registration phase based on the
-   * specific event type being registered.
+   * transformer is handled by the `handlers` object typing.
    */
   transformer: EventTransformer<any>;
 }
 
 /**
- * Creates a HandlerConfig object from an event type identifier and handler input.
- * Returns undefined if the input is invalid or undefined.
+ * Creates a HandlerConfig object from an event type and handler input.
+ * Returns undefined if the input is undefined.
  *
  * @internal
- * @template Event The base event union type.
  * @template State The state type.
- * @param {string} eventTypeIdentifier The string identifying the event type.
- * @param {HandlerConfigInput<any, State> | undefined} handlerInput The handler input (function or definition object).
- * @returns {(HandlerConfig<Event, State> | undefined)} A valid HandlerConfig or undefined.
+ * @param {string} eventType The event `type` string (key of the `handlers` object).
+ * @param {EventHandler<any, State> | undefined} handlerInput The handler input (function or definition object).
+ * @returns {(HandlerConfig<State> | undefined)} A valid HandlerConfig or undefined.
  */
-function createHandlerConfigEntry<Event extends { type: string }, State>(
-  eventTypeIdentifier: string, // Key is always string here
+function createHandlerConfigEntry<State>(
+  eventType: string,
   handlerInput: EventHandler<any, State> | undefined
-): HandlerConfig<Event, State> | undefined {
-  // If the input for this key is undefined or undefined, skip it
+): HandlerConfig<State> | undefined {
+  // Skip keys whose handler is missing.
   if (!handlerInput) {
     return undefined;
   }
 
-  // Predicate always checks type against the identifier string
-  const predicate = (event: Event): event is any =>
-    event.type === eventTypeIdentifier;
-
   if (typeof handlerInput === "function") {
-    // Return the fully constructed config object
     return {
-      predicate,
       handler: handlerInput,
-      // We cast the string key back to the broader EventTypeIdentifier type for internal consistency,
-      // although in this specific flow, it's always a string.
-      eventTypeIdentifier: eventTypeIdentifier as EventTypeIdentifier<
-        Event,
-        any
-      >,
+      eventType,
       transformer: defaultTransformer(),
     };
-  } else {
-    // Return the fully constructed config object
-    return {
-      predicate,
-      handler: handlerInput.handler,
-      // We cast the string key back to the broader EventTypeIdentifier type for internal consistency,
-      // although in this specific flow, it's always a string.
-      eventTypeIdentifier: eventTypeIdentifier as EventTypeIdentifier<
-        Event,
-        any
-      >,
-      transformer: handlerInput.transformer ?? defaultTransformer(),
-    };
   }
+
+  return {
+    handler: handlerInput.handler,
+    eventType,
+    transformer: handlerInput.transformer ?? defaultTransformer(),
+  };
 }
 
 // --- Factory Function (`createBloc`) ---
@@ -206,24 +177,16 @@ export function createBloc<Event extends { type: string }, State>(
   let _isClosed = false;
 
   // --- Populate Handler Registry from Handlers Object ---
-  const handlerConfigs = Object.entries(handlers)
-    .flatMap(([eventTypeIdentifier, handlerInput]) => {
-      const config = createHandlerConfigEntry<Event, State>(
-        eventTypeIdentifier,
-        handlerInput as EventHandler<any, State> | undefined // Ensure type matches helper
-      );
-      // Only keep valid configs; the helper returns undefined for falsy inputs.
-      return config ? [config] : [];
-    });
-
-  /** @internal Use a Map internally for consistency */
-  const _handlerRegistry = new Map<
-    EventTypeIdentifier<Event, any>,
-    HandlerConfig<Event, State>
-  >(
-    // Convert the array of valid config objects into Map entries
-    handlerConfigs.map((config) => [config.eventTypeIdentifier, config])
-  );
+  /** @internal Handlers keyed by event `type` for direct lookup. */
+  const _handlerRegistry = new Map<string, HandlerConfig<State>>();
+  for (const [eventType, handlerInput] of Object.entries(handlers)) {
+    const config = createHandlerConfigEntry<State>(
+      eventType,
+      handlerInput as EventHandler<any, State> | undefined
+    );
+    // Only keep valid configs; the helper returns undefined for falsy inputs.
+    if (config) _handlerRegistry.set(eventType, config);
+  }
 
   // --- State Update Function ---
   /** @internal */
@@ -262,31 +225,26 @@ export function createBloc<Event extends { type: string }, State>(
   /** @internal */
   const _subscription = _eventSubject
     .pipe(
-      // Step 1: Find the matching handler configuration for the incoming event.
-      map((event): [Event, HandlerConfig<Event, State> | undefined] => {
-        for (const config of _handlerRegistry.values()) {
-          if (config.predicate(event)) {
-            // Found a matching handler.
-            return [event, config];
-          }
-        }
-        // No handler found for this event.
-        return [event, undefined];
-      }),
+      // Step 1: Look up the handler configuration by the event's `type`.
+      map((event): [Event, HandlerConfig<State> | undefined] => [
+        event,
+        _handlerRegistry.get(event.type),
+      ]),
 
-      // Step 2: Group events based on the identifier of their matched handler.
+      // Step 2: Group events by the event type of their matched handler.
       // This ensures concurrency strategies (transformers) apply correctly per event type.
-      // Unhandled events are grouped under a special key.
-      groupBy(
-        ([event, config]) =>
-          config?.eventTypeIdentifier ?? " S Y M B O L _ U N H A N D L E D " // Key is now always string or symbol
-      ),
+      // Unhandled events are grouped under the `UNHANDLED` symbol, which
+      // cannot collide with any event type string.
+      groupBy(([, config]) => config?.eventType ?? UNHANDLED),
 
       // Step 3: Process each group of events concurrently.
       // For each group, apply the specific transformer defined in its config.
       mergeMap((grouped$) => {
         // Retrieve the configuration associated with this group's key.
-        const config = _handlerRegistry.get(grouped$.key); // Get config using string key
+        const config =
+          grouped$.key === UNHANDLED
+            ? undefined
+            : _handlerRegistry.get(grouped$.key);
 
         if (!config) {
           // This group contains unhandled events.
@@ -317,9 +275,7 @@ export function createBloc<Event extends { type: string }, State>(
 
             const reportError = (error: unknown): void => {
               console.error(
-                `Bloc: Error in handler for "${String(
-                  config.eventTypeIdentifier
-                )}":`,
+                `Bloc: Error in handler for "${config.eventType}":`,
                 error,
                 "Event:",
                 event
@@ -385,7 +341,8 @@ export function createBloc<Event extends { type: string }, State>(
         return grouped$.pipe(
           // Extract the event object from the [event, config] tuple used in grouping.
           // Cast to 'any' because the transformer expects a specific event type,
-          // but type safety is ensured by the `on` overloads and the `project` function's closure.
+          // but type safety is ensured by the `handlers` object typing and the
+          // `project` function's closure.
           map(([event, _]) => event as any),
           // Apply the transformer (e.g., switchMap(project)).
           config.transformer(project)
