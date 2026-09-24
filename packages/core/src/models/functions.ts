@@ -108,27 +108,6 @@ export type EventHandler<Event, State> =
   | EventHandlerObject<Event, State>; // Object with handler/options
 
 /**
- * A type that represents the mechanism used to identify and register handlers
- * for specific event types within the `handlers` object. It supports two forms:
- *
- * 1.  **String Literal Type:** If the event union (`BaseEvent`) uses discriminated unions
- *     with a `type` property, you can provide the string literal corresponding to
- *     the desired event's `type` (e.g., `'INCREMENT'`).
- * 2.  **Type Predicate Function:** A function that takes an event from the base union
- *     and returns `true` if it matches the specific `Event` subtype, acting as a
- *     type guard (`(event: BaseEvent) => event is Event`).
- *
- * @template BaseEvent The overall event union type for the Bloc (e.g., `CounterEvent`).
- * @template Event The specific subtype of `BaseEvent` that the identifier targets
- *                 (e.g., `IncrementEvent` or `LegacyStatusEvent`).
- */
-export type EventTypeIdentifier<BaseEvent, Event extends BaseEvent> =
-  // Extracts the string literal type if Event has a `type` property
-  | (Event extends { type: infer Type extends string } ? Type : never)
-  // Allows a type predicate function
-  | ((event: BaseEvent) => event is Event);
-
-/**
  * Defines the signature for a callback function that can be provided to `createBloc`
  * to globally handle errors.
  *
