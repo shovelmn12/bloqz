@@ -5,6 +5,7 @@ import { createRelay, Relay, RelayEvent } from "@bloqz/relay";
 
 import { RelayProvider } from "../src/provider.js";
 import { useRelay } from "../src/hooks.js";
+import { RelayContext } from "../src/context.js";
 
 const flushMicrotasks = () => act(async () => {});
 
@@ -148,5 +149,31 @@ describe("RelayProvider", () => {
     unmount();
     await flushMicrotasks();
     expect(seen.at(-1)!.isDisposed).toBe(true);
+  });
+});
+
+describe("sharing a relay via RelayContext", () => {
+  it("provides the shared relay to useRelay and never disposes it", async () => {
+    const shared = createRelay();
+    const onEvent = vi.fn();
+
+    const tree = () => (
+      <RelayContext.Provider value={shared}>
+        <Listener topic="user" onEvent={onEvent} />
+      </RelayContext.Provider>
+    );
+    const first = render(<StrictMode>{tree()}</StrictMode>);
+    const second = render(tree());
+
+    first.unmount();
+    await flushMicrotasks();
+
+    expect(shared.isDisposed).toBe(false);
+    act(() => shared.emit("user", { type: "login" }));
+    expect(onEvent).toHaveBeenCalledTimes(1);
+
+    second.unmount();
+    await flushMicrotasks();
+    expect(shared.isDisposed).toBe(false);
   });
 });

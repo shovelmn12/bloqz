@@ -86,7 +86,22 @@ The relay is created once per mount (so an inline `create` is fine) and disposed
 
 **Props**
 
-- `create?: () => Relay`: An optional function that returns a `Relay` instance. If not provided, one is created with `createRelay()`. The provider owns the returned relay and disposes it on unmount.
+- `create?: () => Relay`: An optional function that returns a `Relay` instance. If not provided, one is created with `createRelay()`. The provider owns the returned relay and disposes it on unmount, so `create` must return a **new** relay.
+
+#### Sharing a relay
+
+Don't pass a relay that is shared with other providers or with non-React code through `create` (e.g. `create={() => appRelay}`). The first provider to unmount would dispose it for everyone. Provide a shared relay through `RelayContext` instead. `useRelay` and `useRelayEvent` work the same, and the relay is never disposed for you:
+
+```tsx
+import { createRelay } from '@bloqz/relay';
+import { RelayContext } from '@bloqz/react-relay';
+
+export const appRelay = createRelay<AppEvents>(); // you own it, and you dispose it
+
+<RelayContext.Provider value={appRelay}>
+  <App />
+</RelayContext.Provider>
+```
 
 ### `useRelay()`
 
