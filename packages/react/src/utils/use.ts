@@ -14,8 +14,10 @@ import {
   AddStrategy,
   CloseStrategy,
 } from "./strategies.js";
-import { map, distinctUntilChanged, Observable } from "./stream.js";
+import { Observable } from "./stream.js";
 import { isEqual } from "lodash-es";
+
+const noop = () => {};
 
 /**
  * A versatile React Hook for consuming a Bloc from Context.
@@ -85,60 +87,75 @@ export function useBloc<Event, State, T>(
     throw new Error("useBloc must be used within a BlocContext.Provider");
   }
 
-  // Whether we are in 'select' mode (reactive state selection).
+  // --- Reactive path ('select') ---
+  //
+  // `subscribe` depends only on the bloc and on whether we are selecting, so an
+  // inline selector (new identity every render) never causes a re-subscribe.
+  // The selector itself is only used by `getSnapshot`, which React always calls
+  // in its latest version, so selector changes are reflected on the next render.
+  //
+  // `getSnapshot` caches the last selected value and returns the SAME reference
+  // while the new selection is deeply equal (lodash `isEqual`). This keeps it
+  // referentially stable, which is what prevents render loops with
+  // object-returning selectors such as `s => ({ a: s.a })`.
   const isSelect = strategy?.type === "select";
   const selector = isSelect
     ? (strategy as SelectStrategy<State, T>).selector
     : undefined;
 
-  // Compute the value for non-reactive strategies (and the initial/current
-  // value for 'select') synchronously. This is memoized so that 'observe',
-  // 'get', 'add', 'close', and the default return stable references as long
-  // as the strategy and bloc don't change.
-  const snapshot = useMemo(() => {
-    if (!strategy) return bloc;
-    if (strategy.type === "select") return strategy.selector(bloc.state);
-    if (strategy.type === "get") return strategy.selector(bloc);
-    if (strategy.type === "observe") return strategy.selector(bloc.state$);
-    if (strategy.type === "add") return bloc.add;
-    if (strategy.type === "close") return bloc.close;
-    return bloc;
-  }, [bloc, strategy]);
-
-  // Holds the latest value delivered by the state$ subscription, tagged with
-  // the selector that produced it. getSnapshot treats an emission as
-  // authoritative only while the current selector matches; when the selector
-  // changes, the synchronously-computed `snapshot` reflects the fresh selector
-  // instead.
-  const emittedRef = useRef<{ selector: typeof selector; value: T } | null>(
-    null
-  );
+  const cacheRef = useRef<{ value: T } | null>(null);
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
-      if (!isSelect || !selector) return () => {};
-
-      const subscription = bloc.state$
-        .pipe(map(selector), distinctUntilChanged(isEqual))
-        .subscribe((val) => {
-          emittedRef.current = { selector, value: val };
-          onStoreChange();
-        });
-
+      if (!isSelect) return noop;
+      const subscription = bloc.state$.subscribe(() => onStoreChange());
       return () => subscription.unsubscribe();
     },
-    [bloc, selector, isSelect]
+    [bloc, isSelect]
   );
 
-  const getSnapshot = useCallback(
-    () => {
-      const emitted = emittedRef.current;
-      return isSelect && emitted && emitted.selector === selector
-        ? emitted.value
-        : snapshot;
-    },
-    [isSelect, selector, snapshot]
-  );
+  const getSnapshot = useCallback((): T | undefined => {
+    if (!selector) return undefined;
+    const next = selector(bloc.state);
+    const cached = cacheRef.current;
+    if (cached && isEqual(cached.value, next)) return cached.value;
+    cacheRef.current = { value: next };
+    return next;
+  }, [bloc, selector]);
 
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  // Always called (rules of hooks); for non-'select' strategies `subscribe` is a
+  // no-op and `getSnapshot` returns a constant `undefined`.
+  const selected = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  // --- Non-reactive paths ---
+  //
+  // Memoized on the bloc, the strategy type and its selector (not the strategy
+  // object, which is a fresh object per `get(...)`/`observe(...)` call). Pass a
+  // stable selector to `observe` to get the same Observable across renders.
+  const type = strategy?.type;
+  const strategySelector =
+    strategy && "selector" in strategy ? strategy.selector : undefined;
+
+  const value = useMemo(() => {
+    switch (type) {
+      case undefined:
+        return bloc;
+      case "get":
+        return (strategySelector as GetStrategy<Event, State, T>["selector"])(
+          bloc
+        );
+      case "observe":
+        return (
+          strategySelector as ObserveStrategy<State, T>["selector"]
+        )(bloc.state$);
+      case "add":
+        return bloc.add;
+      case "close":
+        return bloc.close;
+      default:
+        return undefined;
+    }
+  }, [bloc, type, strategySelector]);
+
+  return isSelect ? (selected as T) : value!;
 }
