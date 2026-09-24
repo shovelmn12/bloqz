@@ -196,7 +196,10 @@ export function createBloc<Event extends { type: string }, State>(
   /** @internal */
   const _eventSubject = new Subject<Event>();
   /** @internal */
-  const _errorSubject = new Subject<{ event: Event; error: unknown }>();
+  const _errorSubject = new Subject<{
+    event: Event | undefined;
+    error: unknown;
+  }>();
   /** @internal */
   const _onErrorCallback: ErrorHandler<Event> | undefined = onError;
   /** @internal */
@@ -354,11 +357,10 @@ export function createBloc<Event extends { type: string }, State>(
           "Bloc: Unrecoverable error in event processing stream:",
           err
         );
-        const streamError = err;
-        const undefinedEvent = undefined as unknown as Event;
         // Report the stream error globally and on the errors$ stream.
-        _onErrorCallback?.(streamError, undefinedEvent);
-        _errorSubject.next({ event: undefinedEvent, error: streamError });
+        // Pipeline errors are not tied to a specific event.
+        _onErrorCallback?.(err, undefined);
+        _errorSubject.next({ event: undefined, error: err });
         // Close the Bloc on unrecoverable stream errors.
         close();
         // Terminate the stream.

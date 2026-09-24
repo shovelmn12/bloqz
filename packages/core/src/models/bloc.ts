@@ -45,8 +45,9 @@ export interface Bloc<Event, State> {
    * This allows for centralized observation or logging of handler-specific errors.
    *
    * It emits an object containing the original `event` that caused the error
-   * and the `error` itself. Stream errors (pipeline errors) are also emitted here,
-   * often with `event` being `undefined`.
+   * and the `error` itself. Errors that are not tied to an event — pipeline
+   * errors in `createBloc`, or source errors in `createPipeBloc` — are emitted
+   * with `event` set to `undefined`.
    *
    * @example
    * const errorSubscription = myBloc.errors$.subscribe(({ event, error }) => {
@@ -54,7 +55,7 @@ export interface Bloc<Event, State> {
    *   // Report error to a tracking service
    * });
    */
-  readonly errors$: Observable<{ event: Event; error: unknown }>;
+  readonly errors$: Observable<{ event: Event | undefined; error: unknown }>;
 
   /**
    * Dispatches an event to the Bloc for processing.
