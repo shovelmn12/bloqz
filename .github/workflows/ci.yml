@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Reads the pnpm version from the root package.json "packageManager" field.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm -r build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm -r test
+
+      - name: Lint packages (publint + attw)
+        run: pnpm lint:pkg
+
+      - name: Node ESM smoke test
+        run: |
+          for pkg in core concurrency relay; do
+            node --input-type=module -e "
+              const m = await import('./packages/${pkg}/dist/index.js');
+              const keys = Object.keys(m);
+              if (keys.length === 0) throw new Error('@bloqz/${pkg} has no exports');
+              console.log('@bloqz/${pkg}:', keys.join(', '));
+            "
+          done
