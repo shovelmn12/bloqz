@@ -30,57 +30,72 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 ```
 
-### 2. Access the Relay instance with the `useRelay` hook
+### 2. Subscribe with `useRelayEvent`
 
-You can then use the `useRelay` hook in any component to get access to the `Relay` instance and use it to publish events or subscribe to topics.
+`useRelayEvent` subscribes on mount and unsubscribes on unmount. It always calls the latest handler, so the handler does not need to be memoized.
 
 ```tsx
-// src/components/MyComponent.tsx
-import { useEffect } from 'react';
+import { useRelayEvent } from '@bloqz/react-relay';
+
+function UserLog() {
+  useRelayEvent('user', (event) => {
+    console.log('User event:', event);
+  });
+
+  useRelayEvent('*', (topic, event) => {
+    console.log(`Event on ${topic}:`, event);
+  });
+
+  return null;
+}
+```
+
+For a typed event map, pass the map and the topic as type arguments:
+
+```tsx
+useRelayEvent<AppEvents, 'user'>('user', (event) => {
+  // event: AppEvents['user']
+});
+```
+
+### 3. Emit with the `useRelay` hook
+
+`useRelay` returns the `Relay` instance, which you can use to emit events or subscribe manually.
+
+```tsx
 import { useRelay } from '@bloqz/react-relay';
 
-function MyComponent() {
-  const relay = useRelay();
-
-  useEffect(() => {
-    const unsubscribe = relay.on('user', (event) => {
-      console.log(`User logged in:`, event);
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [relay]);
-
-  const handleLogin = () => {
-    relay.emit('user', { type: 'login', userId: 'user-123' });
-  };
+function LoginButton() {
+  const relay = useRelay<AppEvents>();
 
   return (
-    <div>
-      <button onClick={handleLogin}>Log In</button>
-    </div>
+    <button onClick={() => relay.emit('user', { type: 'login', userId: 'user-123' })}>
+      Log In
+    </button>
   );
 }
-
-export default MyComponent;
-
 ```
 
 ## API
 
 ### `RelayProvider`
 
-A React component that provides the `Relay` instance to its children via context.
+A React component that provides a `Relay` instance to its children via context.
+
+The relay is created once per mount (so an inline `create` is fine) and disposed when the provider unmounts. It is safe under `React.StrictMode`.
 
 **Props**
 
-- `create?: () => Relay`: An optional function that returns a `Relay` instance. If not provided, a default instance is created.
+- `create?: () => Relay`: An optional function that returns a `Relay` instance. If not provided, one is created with `createRelay()`. The provider owns the returned relay and disposes it on unmount.
 
 ### `useRelay()`
 
-A React hook that returns the `Relay` instance from the context. It must be used within a component that is a descendant of `RelayProvider`.
+A React hook that returns the `Relay` instance from the context. It throws `useRelay must be used within a RelayProvider` when there is no `RelayProvider` ancestor.
 
 **Returns**
 
 - `Relay`: The `Relay` event bus instance.
+
+### `useRelayEvent(topic, handler)`
+
+Subscribes `handler` to `topic` (or `'*'` for every event) for the lifetime of the component. The subscription is renewed only when `topic` changes. Must be used within a `RelayProvider`.
