@@ -8,12 +8,10 @@ export {
   ObservableInput,
   OperatorFunction,
   firstValueFrom,
-} from "rxjs";
-export {
   map,
   mergeMap,
   groupBy,
   tap,
   catchError,
   finalize,
-} from "rxjs/operators";
+} from "rxjs";

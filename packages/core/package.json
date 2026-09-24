@@ -45,7 +45,6 @@
     "test": "vitest --run"
   },
   "dependencies": {
-    "fp-ts": "^2.16.9",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {}

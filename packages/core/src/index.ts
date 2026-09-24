@@ -9,6 +9,7 @@ export type { BlocContext } from "./models/context.js";
 // Configuration Types
 export type { CreateBlocProps, CreatePipeBlocProps } from "./models/create.js";
 export type {
+  ErrorHandler,
   EventHandler,
   EventHandlerFunction,
   EventHandlerObject,
