@@ -1,99 +1,89 @@
-import { renderHook } from "@testing-library/react";
+import React, { createContext, FC, PropsWithChildren } from "react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { select, get, observe, add, close } from "../src/utils/strategies";
+import { createBloc, Bloc } from "@bloqz/core";
+import { select, get, observe, add, close } from "../src/utils/strategies.js";
+import { useBloc } from "../src/index.js";
 
-// Mock React.useMemo since we are using it inside the strategies.
-// Wait, renderHook already provides a React environment, so useMemo should work if called inside the hook.
-// The strategies are hooks now!
+// Strategies are plain factories, so they can be created at module scope.
+type S = { count: number };
+type E = { type: "inc" };
+const selectCount = select((s: S) => s.count);
+const addStrategy = add();
 
-describe("Strategies Hooks", () => {
-  it("select returns stable reference with same selector", () => {
-    const selector = (state: any) => state.value;
-    const { result, rerender } = renderHook(() => select(selector));
-
-    const firstResult = result.current;
-    rerender();
-    const secondResult = result.current;
-
-    expect(firstResult).toBe(secondResult);
-    expect(firstResult.type).toBe("select");
-    expect(firstResult.selector).toBe(selector);
+describe("Strategy factories (not hooks)", () => {
+  it("can be called outside of a React component", () => {
+    expect(() => select()).not.toThrow();
+    expect(() => select((s: S) => s.count)).not.toThrow();
+    expect(() => get((b: Bloc<E, S>) => b.add)).not.toThrow();
+    expect(() => observe((s$) => s$)).not.toThrow();
+    expect(() => add()).not.toThrow();
+    expect(() => close()).not.toThrow();
   });
 
-  it("select returns new reference with new selector", () => {
-    const { result, rerender } = renderHook(({ sel }) => select(sel), {
-      initialProps: { sel: (state: any) => state.a },
-    });
-
-    const firstResult = result.current;
-
-    // Change selector
-    rerender({ sel: (state: any) => state.b });
-    const secondResult = result.current;
-
-    expect(firstResult).not.toBe(secondResult);
-    expect(secondResult.selector).not.toBe(firstResult.selector);
+  it("select(selector) returns a select strategy with that selector", () => {
+    const selector = (state: { value: number }) => state.value;
+    const strategy = select(selector);
+    expect(strategy.type).toBe("select");
+    expect(strategy.selector).toBe(selector);
   });
 
-  it("select works with optional selector (default identity)", () => {
-    const { result, rerender } = renderHook(() => select());
-
-    const firstResult = result.current;
-    rerender();
-    const secondResult = result.current;
-
-    expect(firstResult).toBe(secondResult);
-    expect(firstResult.type).toBe("select");
-
+  it("select() returns a shared identity strategy", () => {
+    const a = select();
+    const b = select();
+    expect(a).toBe(b);
+    expect(a.type).toBe("select");
     const testState = { foo: "bar" };
-    expect(firstResult.selector(testState)).toBe(testState); // Identity check
+    expect(a.selector(testState)).toBe(testState);
   });
 
-  it("get returns stable reference with same selector", () => {
-    const selector = (bloc: any) => bloc.add;
-    const { result, rerender } = renderHook(() => get(selector));
-
-    const firstResult = result.current;
-    rerender();
-    const secondResult = result.current;
-
-    expect(firstResult).toBe(secondResult);
-    expect(firstResult.type).toBe("get");
-    expect(firstResult.selector).toBe(selector);
+  it("get(selector) returns a get strategy with that selector", () => {
+    const selector = (bloc: Bloc<E, S>) => bloc.add;
+    const strategy = get(selector);
+    expect(strategy.type).toBe("get");
+    expect(strategy.selector).toBe(selector);
   });
 
-  it("observe returns stable reference with same selector", () => {
-    const selector = (state$: any) => state$;
-    const { result, rerender } = renderHook(() => observe(selector));
-
-    const firstResult = result.current;
-    rerender();
-    const secondResult = result.current;
-
-    expect(firstResult).toBe(secondResult);
-    expect(firstResult.type).toBe("observe");
-    expect(firstResult.selector).toBe(selector);
+  it("observe(selector) returns an observe strategy with that selector", () => {
+    const selector = <T,>(state$: T) => state$;
+    const strategy = observe(selector);
+    expect(strategy.type).toBe("observe");
+    expect(strategy.selector).toBe(selector);
   });
 
-  it("add returns stable reference", () => {
-    const { result, rerender } = renderHook(() => add());
-
-    const firstResult = result.current;
-    rerender();
-    const secondResult = result.current;
-
-    expect(firstResult).toBe(secondResult);
-    expect(firstResult.type).toBe("add");
+  it("add() returns a frozen singleton", () => {
+    expect(add()).toBe(add());
+    expect(add().type).toBe("add");
+    expect(Object.isFrozen(add())).toBe(true);
   });
 
-  it("close returns stable reference", () => {
-    const { result, rerender } = renderHook(() => close());
+  it("close() returns a frozen singleton", () => {
+    expect(close()).toBe(close());
+    expect(close().type).toBe("close");
+    expect(Object.isFrozen(close())).toBe(true);
+  });
 
-    const firstResult = result.current;
-    rerender();
-    const secondResult = result.current;
+  it("works with useBloc when the strategy is created at module scope", async () => {
+    const Ctx = createContext<Bloc<E, S> | undefined>(undefined);
+    const bloc = createBloc<E, S>({
+      initialState: { count: 0 },
+      handlers: { inc: (_, { update }) => update((s) => ({ count: s.count + 1 })) },
+    });
+    const wrapper: FC<PropsWithChildren> = ({ children }) => (
+      <Ctx.Provider value={bloc}>{children}</Ctx.Provider>
+    );
 
-    expect(firstResult).toBe(secondResult);
-    expect(firstResult.type).toBe("close");
+    const { result } = renderHook(
+      () => ({
+        count: useBloc(Ctx, selectCount),
+        dispatch: useBloc(Ctx, addStrategy),
+      }),
+      { wrapper }
+    );
+
+    expect(result.current.count).toBe(0);
+    act(() => result.current.dispatch({ type: "inc" }));
+    await waitFor(() => expect(result.current.count).toBe(1));
+    bloc.close();
   });
 });
